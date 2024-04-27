@@ -1,14 +1,5 @@
 from django.db import models
-
-
-class HomeLinkUser(models.Model):
-    username = models.TextField(unique=True)
-    email = models.EmailField(unique=True)
-    password = models.CharField(max_length=50)  # TODO secret
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.username
+from django.contrib.auth.models import User
 
 
 class Space(models.Model):
@@ -16,8 +7,8 @@ class Space(models.Model):
     description = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    owner = models.ForeignKey(HomeLinkUser, on_delete=models.CASCADE)
-    users = models.ManyToManyField(HomeLinkUser, related_name="spaces")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    users = models.ManyToManyField(User, related_name="spaces")
 
     def __str__(self):
         return self.name
@@ -29,7 +20,7 @@ class Device(models.Model):
     data = models.JSONField(null=True, blank=True)
     added_at = models.DateTimeField(auto_now_add=True)
 
-    owner = models.ForeignKey(HomeLinkUser, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
