@@ -15,4 +15,4 @@ class UserViewSet(viewsets.ModelViewSet):
             )
             return Response({"user_id": user.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
