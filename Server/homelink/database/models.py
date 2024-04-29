@@ -25,3 +25,12 @@ class Device(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Command(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    devices = models.ManyToManyField(Device, related_name="commands")
+
+    description = models.TextField()
+    repeat_interval = models.IntegerField(null=True, blank=True, db_index=True)
+    scheduled_at = models.DateTimeField(null=True, blank=True, db_index=True)
