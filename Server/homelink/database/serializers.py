@@ -6,10 +6,12 @@ from django.contrib.auth.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["username", "email", "first_name", "last_name"]
+        fields = ["username", "email", "pk"]
 
 
 class SpaceSerializer(serializers.ModelSerializer):
+    users = UserSerializer(many=True)
+
     class Meta:
         model = Space
         fields = "__all__"

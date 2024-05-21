@@ -3,6 +3,13 @@ from .views import *
 
 
 urlpatterns = [
+    # add user (username, password, email)
     path("user/add/", UserViewSet.as_view({"post": "create"})),
-    path("user/get/<int:pk>/", UserViewSet.as_view({"get": "retrieve"})),
+    # owner id: number
+    path("devices/add/", DeviceViewSet.as_view({"post": "create"})),
+    # returns devices for authorized user
+    path("devices/get/", DeviceViewSet.as_view({"get": "list"})),
+    path("spaces/add/", SpaceViewSet.as_view({"post": "create"})),
+    # returns spaces authorized user participates in
+    path("spaces/get/", SpaceViewSet.as_view({"get": "list"})),
 ]
