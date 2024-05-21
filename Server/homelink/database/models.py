@@ -11,20 +11,21 @@ class Space(models.Model):
     users = models.ManyToManyField(User, related_name="spaces")
 
     def __str__(self):
-        return self.name
+        return f"{self.name} {self.owner.username}"
 
 
 class Device(models.Model):
     name = models.TextField()
     description = models.TextField(null=True, blank=True)
     data = models.JSONField(null=True, blank=True)
+
     added_at = models.DateTimeField(auto_now_add=True)
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} {self.owner.username}"
 
 
 class Command(models.Model):
@@ -32,5 +33,6 @@ class Command(models.Model):
     devices = models.ManyToManyField(Device, related_name="commands")
 
     description = models.TextField()
+
     repeat_interval = models.IntegerField(null=True, blank=True, db_index=True)
     scheduled_at = models.DateTimeField(null=True, blank=True, db_index=True)
