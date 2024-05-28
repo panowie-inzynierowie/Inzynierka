@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:inzynierka_client/pages/commands.dart';
 import 'package:inzynierka_client/pages/spaces.dart';
+import 'package:inzynierka_client/state/state.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,6 +28,9 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Hello ${context.watch<AppState>().username}'),
+      ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
