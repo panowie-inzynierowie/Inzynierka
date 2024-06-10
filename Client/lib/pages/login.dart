@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:inzynierka_client/pages/home.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:inzynierka_client/pages/home.dart';
+
+enum FormType { login, register }
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -15,10 +18,14 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   String username = '';
   String password = '';
+  String confirmPassword = '';
+  FormType currentForm = FormType.login;
 
-  @override
-  void initState() {
-    super.initState();
+  void switchForm() {
+    setState(() {
+      currentForm =
+          currentForm == FormType.login ? FormType.register : FormType.login;
+    });
   }
 
   void _login() async {
@@ -33,9 +40,11 @@ class _LoginPageState extends State<LoginPage> {
       }),
     );
     if (response.statusCode == 200) {
-      context.read<AppState>().setUsername(
-            username,
-          );
+      context.read<AppState>().setUsername(username);
+      context
+          .read<AppState>()
+          .setToken(json.decoder.convert(response.body)['token']);
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -44,6 +53,29 @@ class _LoginPageState extends State<LoginPage> {
       );
     } else {
       throw Exception('Failed to log in.');
+    }
+  }
+
+  void _register() async {
+    if (password != confirmPassword) {
+      throw Exception('Passwords do not match.');
+    }
+
+    final response = await http.post(
+      Uri.parse('http://127.0.0.1:8001/register/'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'username': username,
+        'password': password,
+      }),
+    );
+    if (response.statusCode == 201) {
+      context.read<AppState>().setUsername(username);
+      _login();
+    } else {
+      throw Exception('Failed to register.');
     }
   }
 
@@ -84,12 +116,34 @@ class _LoginPageState extends State<LoginPage> {
                 });
               },
             ),
+            if (currentForm == FormType.register) ...[
+              const SizedBox(height: 10),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password',
+                ),
+                obscureText: true,
+                onChanged: (value) {
+                  setState(() {
+                    confirmPassword = value;
+                  });
+                },
+              ),
+            ],
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                _login();
+                if (currentForm == FormType.login) {
+                  _login();
+                } else {
+                  _register();
+                }
               },
-              child: const Text('Login'),
+              child: const Text('Submit'),
+            ),
+            TextButton(
+              onPressed: switchForm,
+              child: Text(currentForm == FormType.login ? 'Register' : 'Login'),
             ),
           ],
         ),
