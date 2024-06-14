@@ -1,48 +1,30 @@
 import 'package:flutter/material.dart';
+import 'commands.dart';
 
-class CommandDetailPage extends StatefulWidget {
-  final String commandName;
+class CommandDetailsPage extends StatelessWidget {
+  final Command command;
 
-  const CommandDetailPage({super.key, required this.commandName});
-
-  @override
-  CommandDetailPageState createState() => CommandDetailPageState();
-}
-
-class CommandDetailPageState extends State<CommandDetailPage> {
-  bool _isSwitched = false;
+  const CommandDetailsPage({required this.command, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.commandName),
+        title: Text(command.name),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Szczegóły dla ${widget.commandName}'),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Switch(
-                  value: _isSwitched,
-                  onChanged: (bool value) {
-                    setState(() {
-                      _isSwitched = value;
-                    });
-                  },
-                ),
-                const SizedBox(width: 10),
-                Text(_isSwitched ? 'Wyłącz' : 'Włącz'),
-              ],
+            Text(
+              'Name: ${command.name}',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            ElevatedButton(
-              onPressed: () {
-                // Tu można dodać logikę do usunięcia komendy
-              },
-              child: const Text('Usuń'),
+            SizedBox(height: 10),
+            Text(
+              'Description: ${command.description}',
+              style: TextStyle(fontSize: 16),
             ),
           ],
         ),

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:inzynierka_client/classes/device.dart';
-import 'package:inzynierka_client/pages/device_details.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'space_details.dart'; // Assuming you have a SpaceDetailsPage in space_details.dart
+import 'create_space.dart'; // Assuming you have a CreateSpacePage in create_space.dart
+import 'package:inzynierka_client/state/state.dart';
+import '../classes/space.dart';
 
 class SpacesPage extends StatefulWidget {
   const SpacesPage({super.key});
@@ -10,90 +15,90 @@ class SpacesPage extends StatefulWidget {
 }
 
 class SpacesPageState extends State<SpacesPage> {
-  late Future<Map<String, List<Device>>> _spacesFuture;
-  Map<String, List<Device>> _spaces = {};
+  late Future<List<Space>> _spacesFuture;
 
   @override
   void initState() {
     super.initState();
-    _spacesFuture = fetchSpacesWithDevices();
+    _spacesFuture = fetchSpaces();
   }
 
-  Future<Map<String, List<Device>>> fetchSpacesWithDevices() async {
-    await Future.delayed(const Duration(seconds: 1));
-    _spaces = {
-      'Przestrzeń 1': [
-        Device(name: 'Urządzenie 1A'),
-        Device(name: 'Urządzenie 1B')
-      ],
-      'Przestrzeń 2': [
-        Device(name: 'Urządzenie 2A'),
-        Device(name: 'Urządzenie 2B')
-      ],
-      'Przestrzeń 3': [
-        Device(name: 'Urządzenie 3A'),
-        Device(name: 'Urządzenie 3B')
-      ],
-    };
-    return _spaces;
-  }
+  Future<List<Space>> fetchSpaces() async {
+    final token = Provider.of<AppState>(context, listen: false).token;
 
-  void updateDevice(String spaceName, Device updatedDevice) {
-    setState(() {
-      final spaceDevices = _spaces[spaceName];
-      if (spaceDevices != null) {
-        final index = spaceDevices
-            .indexWhere((device) => device.oldName == updatedDevice.oldName);
-        if (index != -1) {
-          spaceDevices[index] = updatedDevice;
-        }
-      }
-    });
+    final response = await http.get(
+      Uri.parse('http://127.0.0.1:8001/api/spaces/get/'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Token $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as List;
+      List<Space> spaces = data.map((item) => Space.fromJson(item)).toList();
+      return spaces;
+    } else {
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      throw Exception('Failed to load spaces');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder<Map<String, List<Device>>>(
+      appBar: AppBar(
+        title: Text('Spaces'),
+      ),
+      body: FutureBuilder<List<Space>>(
         future: _spacesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
+            print('Error: ${snapshot.error}');
             return const Center(child: Text('Błąd wczytywania danych'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('Brak dostępnych przestrzeni'));
           }
 
           final spaces = snapshot.data!;
-          return ListView(
-            children: spaces.entries.map((entry) {
-              return ExpansionTile(
-                title: Text(entry.key),
-                children: entry.value.map((device) {
-                  return ListTile(
-                    title: Text(device.name),
-                    onTap: () async {
-                      final updatedDevice = await Navigator.push<Device>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DeviceDetailPage(
-                            spaceName: entry.key,
-                            device: device
-                                .copyWith(), // Create a copy to avoid mutating the original directly
-                          ),
-                        ),
-                      );
-                      if (updatedDevice != null) {
-                        updateDevice(entry.key, updatedDevice);
-                      }
-                    },
+          return ListView.builder(
+            itemCount: spaces.length,
+            itemBuilder: (context, index) {
+              final space = spaces[index];
+              return ListTile(
+                title: Text(space.name),
+                subtitle: Text(space.description ?? ''),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SpaceDetailsPage(space: space),
+                    ),
                   );
-                }).toList(),
+                },
               );
-            }).toList(),
+            },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CreateSpacePage(),
+            ),
+          );
+          if (result == true) {
+            setState(() {
+              _spacesFuture = fetchSpaces(); // Refresh the spaces list
+            });
+          }
+        },
+        child: Icon(Icons.add),
       ),
     );
   }
