@@ -1,9 +1,13 @@
+import json
+
 from django.contrib.auth.models import User
 from rest_framework import viewsets
-from .models import *
-from .serializers import *
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+
+from .models import *
+from .serializers import *
+from .llm import get_response
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -53,6 +57,20 @@ class DeviceViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    def trigger(self, request):
+        device = Device.objects.get(id=request.data.get("device_id"))
+        commands = [
+            {"key": c.pk, "details": c.description}
+            for c in Command.objects.filter(devices=device)
+        ]
+        response = get_response(
+            f"These are avaialable commands: {json.dumps(commands)} "
+            f"And there is an incoming request from device with name {device.name}: {request.data.get('action')}"
+            "are there any matching commands to be triggered? if yes, return valid JSON with array of actions to perform, "
+            "every item has fields: device, action. If no return empty array, do not return anything else than a valid JSON"
+        )
+        return Response(json.loads(response))
 
 
 class SpaceViewSet(viewsets.ModelViewSet):
