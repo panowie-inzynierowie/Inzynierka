@@ -23,4 +23,4 @@ def get_response(prompt):
             {"role": "user", "content": prompt},
         ],
     )
-    return response.choices[0].message
+    return response.choices[0].message.content
