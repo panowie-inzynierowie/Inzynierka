@@ -36,11 +36,11 @@ class HomePageState extends State<HomePage> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Przestrzenie',
+            label: 'Spaces',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
-            label: 'Komendy',
+            label: 'All commands',
           ),
         ],
         currentIndex: _selectedIndex,
