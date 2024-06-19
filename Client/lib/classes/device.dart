@@ -1,15 +1,20 @@
 class Device {
-  String name;
-  String description;
-  String oldName;
+  final int id;
+  final String name;
+  final String? description;
+  final int spaceId;
 
-  Device({required this.name, this.description = 'Opis urządzenia'})
-      : oldName = name;
+  Device(
+      {required this.id,
+      required this.name,
+      this.description,
+      required this.spaceId});
 
-  Device copyWith({String? name, String? description}) {
+  factory Device.fromJson(Map<String, dynamic> json) {
     return Device(
-      name: name ?? this.name,
-      description: description ?? this.description,
-    )..oldName = oldName;
+        id: json['id'] ?? 0,
+        name: json['name'] ?? '',
+        description: json['description'],
+        spaceId: json['space'] != null ? json['space']['id'] ?? 0 : 0);
   }
 }

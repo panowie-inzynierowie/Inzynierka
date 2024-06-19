@@ -1,20 +1,21 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
-import 'command_details.dart';
 import 'package:inzynierka_client/state/state.dart';
+import 'command_details.dart'; // Assuming you have a CommandDetailsPage
+import '../classes/command.dart';
 
 class CommandsPage extends StatefulWidget {
-  const CommandsPage({super.key});
+  const CommandsPage({Key? key}) : super(key: key);
 
   @override
-  CommandsPageState createState() => CommandsPageState();
+  _CommandsPageState createState() => _CommandsPageState();
 }
 
-class CommandsPageState extends State<CommandsPage> {
+class _CommandsPageState extends State<CommandsPage> {
   late Future<List<Command>> _commandsFuture;
-  List<Command> _commands = [];
 
   @override
   void initState() {
@@ -35,10 +36,9 @@ class CommandsPageState extends State<CommandsPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as List;
-      List<Command> commands =
-          data.map((item) => Command.fromJson(item)).toList();
-      _commands = commands;
-      return _commands;
+      log('Pobrane dane:');
+      log('Response data: $data'); // Print the data to verify
+      return data.map((item) => Command.fromJson(item)).toList();
     } else {
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
@@ -58,7 +58,7 @@ class CommandsPageState extends State<CommandsPage> {
             print('Error: ${snapshot.error}');
             return const Center(child: Text('Błąd wczytywania danych'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Brak dostępnych poleceń'));
+            return const Center(child: Text('Brak dostępnych komend'));
           }
 
           final commands = snapshot.data!;
@@ -67,8 +67,8 @@ class CommandsPageState extends State<CommandsPage> {
             itemBuilder: (context, index) {
               final command = commands[index];
               return ListTile(
-                title: Text(command.name),
-                subtitle: Text(command.description),
+                title: Text(command.description),
+                subtitle: Text('Scheduled at: ${command.scheduledAt}'),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -83,20 +83,6 @@ class CommandsPageState extends State<CommandsPage> {
           );
         },
       ),
-    );
-  }
-}
-
-class Command {
-  final String name;
-  final String description;
-
-  Command({required this.name, required this.description});
-
-  factory Command.fromJson(Map<String, dynamic> json) {
-    return Command(
-      name: json['name'],
-      description: json['description'],
     );
   }
 }

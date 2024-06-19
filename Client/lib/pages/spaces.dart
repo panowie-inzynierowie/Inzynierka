@@ -48,9 +48,6 @@ class SpacesPageState extends State<SpacesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Spaces'),
-      ),
       body: FutureBuilder<List<Space>>(
         future: _spacesFuture,
         builder: (context, snapshot) {
