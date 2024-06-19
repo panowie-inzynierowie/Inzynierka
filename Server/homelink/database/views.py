@@ -90,4 +90,5 @@ class CommandViewSet(viewsets.ModelViewSet):
         return Command.objects.filter(devices__owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save()
+        serializer.save(author=self.request.user)
+
