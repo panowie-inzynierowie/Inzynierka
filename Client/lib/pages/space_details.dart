@@ -1,10 +1,13 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
 import 'create_device.dart'; // Assuming you have a CreateDevicePage
+import 'device_details.dart'; // Import DeviceDetailsPage
 import '../classes/space.dart';
+import '../classes/device.dart'; // Import the Device model
 
 class SpaceDetailsPage extends StatefulWidget {
   final Space space;
@@ -37,6 +40,8 @@ class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as List;
+      log('Pobrane dane:');
+      log('Response data: $data'); // Print the data to verify
       return data.map((item) => Device.fromJson(item)).toList();
     } else {
       print('Response status: ${response.statusCode}');
@@ -74,7 +79,12 @@ class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
                 title: Text(device.name),
                 subtitle: Text(device.description ?? ''),
                 onTap: () {
-                  // Navigate to device details or perform any action
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DeviceDetailsPage(device: device),
+                    ),
+                  );
                 },
               );
             },
@@ -92,29 +102,6 @@ class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
         },
         child: Icon(Icons.add),
       ),
-    );
-  }
-}
-
-class Device {
-  final int id;
-  final String name;
-  final String? description;
-  final int spaceId;
-
-  Device(
-      {required this.id,
-      required this.name,
-      this.description,
-      required this.spaceId});
-
-  factory Device.fromJson(Map<String, dynamic> json) {
-    return Device(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
-      description: json['description'],
-      spaceId: json['space'] ??
-          0, // Adjust this field according to your API response
     );
   }
 }
