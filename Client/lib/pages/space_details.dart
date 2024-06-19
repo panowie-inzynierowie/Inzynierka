@@ -5,9 +5,8 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
 import 'create_device.dart'; // Assuming you have a CreateDevicePage
-import 'device_details.dart'; // Import DeviceDetailsPage
+import '../classes/device.dart';
 import '../classes/space.dart';
-import '../classes/device.dart'; // Import the Device model
 
 class SpaceDetailsPage extends StatefulWidget {
   final Space space;
@@ -50,6 +49,12 @@ class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
     }
   }
 
+  void refreshDevices() {
+    setState(() {
+      _devicesFuture = fetchDevices();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,12 +84,7 @@ class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
                 title: Text(device.name),
                 subtitle: Text(device.description ?? ''),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DeviceDetailsPage(device: device),
-                    ),
-                  );
+                  // Navigate to device details or perform any action
                 },
               );
             },
@@ -92,13 +92,16 @@ class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => CreateDevicePage(spaceId: widget.space.id),
             ),
           );
+          if (result == true) {
+            refreshDevices();
+          }
         },
         child: Icon(Icons.add),
       ),
