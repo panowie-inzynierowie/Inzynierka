@@ -1,68 +1,59 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:inzynierka_client/classes/device.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'package:inzynierka_client/state/state.dart';
+import 'create_command.dart'; // Assuming you have a CreateCommandPage
+import 'command_details.dart'; // Assuming you have a CommandDetailsPage
+import '../classes/device.dart';
+import '../classes/command.dart';
 
-class DeviceDetailPage extends StatefulWidget {
-  final String spaceName;
+class DeviceDetailsPage extends StatefulWidget {
   final Device device;
 
-  const DeviceDetailPage(
-      {super.key, required this.spaceName, required this.device});
+  const DeviceDetailsPage({required this.device, Key? key}) : super(key: key);
 
   @override
-  DeviceDetailPageState createState() => DeviceDetailPageState();
+  _DeviceDetailsPageState createState() => _DeviceDetailsPageState();
 }
 
-class DeviceDetailPageState extends State<DeviceDetailPage> {
-  late TextEditingController _nameController;
-  late TextEditingController _descriptionController;
+class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
+  late Future<List<Command>> _commandsFuture;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.device.name);
-    _descriptionController =
-        TextEditingController(text: widget.device.description);
+    _commandsFuture = fetchCommands();
   }
 
-  void _editDevice() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edytuj urządzenie'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nazwa'),
-              ),
-              TextField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Opis'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  widget.device.name = _nameController.text;
-                  widget.device.description = _descriptionController.text;
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Zatwierdź'),
-            ),
-          ],
-        );
+  Future<List<Command>> fetchCommands() async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+
+    final response = await http.get(
+      Uri.parse('http://127.0.0.1:8001/api/commands/get/'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Token $token',
       },
     );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as List;
+      log('Pobrane dane:');
+      log('Response data: $data'); // Print the data to verify
+      return data.map((item) => Command.fromJson(item)).toList();
+    } else {
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      throw Exception('Failed to load commands');
+    }
   }
 
-  void _deleteDevice() {
-    // Tu można dodać logikę do usunięcia urządzenia z przestrzeni
-    Navigator.of(context).pop(); // Just pop for now, implement logic as needed
+  void refreshCommands() {
+    setState(() {
+      _commandsFuture = fetchCommands();
+    });
   }
 
   @override
@@ -71,26 +62,56 @@ class DeviceDetailPageState extends State<DeviceDetailPage> {
       appBar: AppBar(
         title: Text(widget.device.name),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Opis: ${widget.device.description}'),
-            ElevatedButton(
-              onPressed: _editDevice,
-              child: const Text('Edytuj'),
+      body: FutureBuilder<List<Command>>(
+        future: _commandsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            print('Error: ${snapshot.error}');
+            return const Center(child: Text('Błąd wczytywania danych'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Brak dostępnych komend'));
+          }
+
+          final commands = snapshot.data!
+              .where((command) => command.deviceIds.contains(widget.device.id))
+              .toList();
+          return ListView.builder(
+            itemCount: commands.length,
+            itemBuilder: (context, index) {
+              final command = commands[index];
+              return ListTile(
+                title: Text(command.description),
+                subtitle: Text('Scheduled at: ${command.scheduledAt}'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CommandDetailsPage(command: command),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  CreateCommandPage(deviceId: widget.device.id),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(widget.device.copyWith(
-                  name: _nameController.text,
-                  description: _descriptionController.text,
-                ));
-              },
-              child: const Text('Usuń z przestrzeni'),
-            ),
-          ],
-        ),
+          );
+          if (result == true) {
+            refreshCommands();
+          }
+        },
+        child: Icon(Icons.add),
       ),
     );
   }
