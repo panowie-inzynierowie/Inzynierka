@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'commands.dart';
+import '../classes/command.dart';
 
 class CommandDetailsPage extends StatelessWidget {
   final Command command;
@@ -10,7 +10,7 @@ class CommandDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(command.name),
+        title: Text('Command Details'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -18,14 +18,24 @@ class CommandDetailsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Name: ${command.name}',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              'Description:',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
+            Text(command.description),
             SizedBox(height: 10),
             Text(
-              'Description: ${command.description}',
-              style: TextStyle(fontSize: 16),
+              'Scheduled At:',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
+            Text(command.scheduledAt != null
+                ? command.scheduledAt!.toLocal().toString()
+                : 'No scheduled time'),
+            SizedBox(height: 10),
+            Text(
+              'Devices:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            ...command.deviceIds.map((id) => Text('Device ID: $id')).toList(),
           ],
         ),
       ),
