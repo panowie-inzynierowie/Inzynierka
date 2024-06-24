@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CreateDevicePage extends StatefulWidget {
   final int spaceId;
@@ -36,7 +37,7 @@ class _CreateDevicePageState extends State<CreateDevicePage> {
       print('Request payload: $payload'); // Log the payload
 
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8001/api/devices/add/'),
+        Uri.parse('${dotenv.env['API_URL']}/api/devices/add/'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Token $token',

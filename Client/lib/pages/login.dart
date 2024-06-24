@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
@@ -30,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void _login() async {
     final response = await http.post(
-      Uri.parse('http://127.0.0.1:8001/login/'),
+      Uri.parse('${dotenv.env['API_URL']}/login/'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -62,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     final response = await http.post(
-      Uri.parse('http://127.0.0.1:8001/register/'),
+      Uri.parse('${dotenv.env['API_URL']}/register/'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

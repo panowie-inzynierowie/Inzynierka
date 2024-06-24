@@ -6,6 +6,7 @@ import 'space_details.dart'; // Assuming you have a SpaceDetailsPage in space_de
 import 'create_space.dart'; // Assuming you have a CreateSpacePage in create_space.dart
 import 'package:inzynierka_client/state/state.dart';
 import '../classes/space.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SpacesPage extends StatefulWidget {
   const SpacesPage({super.key});
@@ -27,7 +28,7 @@ class SpacesPageState extends State<SpacesPage> {
     final token = Provider.of<AppState>(context, listen: false).token;
 
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:8001/api/spaces/get/'),
+      Uri.parse('${dotenv.env['API_URL']}/api/spaces/get/'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Token $token',

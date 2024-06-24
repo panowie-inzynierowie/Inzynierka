@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CreateCommandPage extends StatefulWidget {
   final int deviceId;
@@ -27,7 +28,7 @@ class _CreateCommandPageState extends State<CreateCommandPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8001/api/commands/add/'),
+        Uri.parse('${dotenv.env["API_URL"]}/api/commands/add/'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Token $token',

@@ -8,6 +8,7 @@ import 'create_command.dart'; // Assuming you have a CreateCommandPage
 import 'command_details.dart'; // Assuming you have a CommandDetailsPage
 import '../classes/device.dart';
 import '../classes/command.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DeviceDetailsPage extends StatefulWidget {
   final Device device;
@@ -31,7 +32,7 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
     final token = Provider.of<AppState>(context, listen: false).token;
 
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:8001/api/commands/get/'),
+      Uri.parse('${dotenv.env['API_URL']}/api/commands/get/'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Token $token',

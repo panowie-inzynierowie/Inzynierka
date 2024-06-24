@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
@@ -30,7 +31,7 @@ class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
     final token = Provider.of<AppState>(context, listen: false).token;
 
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:8001/api/devices/get/'),
+      Uri.parse('${dotenv.env['API_URL']}/api/devices/get/'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Token $token',

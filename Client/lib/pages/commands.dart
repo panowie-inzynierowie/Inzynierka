@@ -1,10 +1,11 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
-import 'command_details.dart'; // Assuming you have a CommandDetailsPage
+import 'command_details.dart';
 import '../classes/command.dart';
 
 class CommandsPage extends StatefulWidget {
@@ -27,7 +28,7 @@ class _CommandsPageState extends State<CommandsPage> {
     final token = Provider.of<AppState>(context, listen: false).token;
 
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:8001/api/commands/get/'),
+      Uri.parse('${dotenv.env["API_URL"]}/api/commands/get/'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Token $token',

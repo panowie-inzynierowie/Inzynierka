@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CreateSpacePage extends StatefulWidget {
   @override
@@ -24,7 +25,7 @@ class _CreateSpacePageState extends State<CreateSpacePage> {
       final token = Provider.of<AppState>(context, listen: false).token;
 
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8001/api/spaces/add/'),
+        Uri.parse('${dotenv.env['API_URL']}/api/spaces/add/'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Token $token', // Use the token from AppState
