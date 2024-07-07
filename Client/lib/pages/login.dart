@@ -77,7 +77,9 @@ class _LoginPageState extends State<LoginPage> {
     if (response.statusCode == 201) {
       if (!mounted) return;
       context.read<AppState>().setUsername(username);
-      _login();
+      context
+          .read<AppState>()
+          .setToken(json.decoder.convert(response.body)['token']);
     } else {
       throw Exception('Failed to register.');
     }
