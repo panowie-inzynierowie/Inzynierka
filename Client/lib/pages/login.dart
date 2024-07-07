@@ -41,8 +41,8 @@ class _LoginPageState extends State<LoginPage> {
         'password': password,
       }),
     );
+    if (!mounted) return;
     if (response.statusCode == 200) {
-      if (!mounted) return;
       context.read<AppState>().setUsername(username);
       context
           .read<AppState>()
@@ -55,13 +55,15 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } else {
-      throw Exception('Failed to log in.');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Failed to log in')));
     }
   }
 
   void _register() async {
     if (password != confirmPassword) {
-      throw Exception('Passwords do not match.');
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Passwords do not match')));
     }
 
     final response = await http.post(
@@ -74,14 +76,15 @@ class _LoginPageState extends State<LoginPage> {
         'password': password,
       }),
     );
+    if (!mounted) return;
     if (response.statusCode == 201) {
-      if (!mounted) return;
       context.read<AppState>().setUsername(username);
       context
           .read<AppState>()
           .setToken(json.decoder.convert(response.body)['token']);
     } else {
-      throw Exception('Failed to register.');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Failed to register')));
     }
   }
 
