@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
 import 'package:inzynierka_client/pages/home.dart';
+import 'package:inzynierka_client/scaffold.dart';
 
 enum FormType { login, register }
 
@@ -41,6 +42,7 @@ class _LoginPageState extends State<LoginPage> {
       }),
     );
     if (response.statusCode == 200) {
+      if (!mounted) return;
       context.read<AppState>().setUsername(username);
       context
           .read<AppState>()
@@ -73,6 +75,7 @@ class _LoginPageState extends State<LoginPage> {
       }),
     );
     if (response.statusCode == 201) {
+      if (!mounted) return;
       context.read<AppState>().setUsername(username);
       _login();
     } else {
@@ -82,71 +85,90 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GradientScaffold(
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Login to your account!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Username',
-              ),
-              onChanged: (value) {
-                setState(() {
-                  username = value;
-                });
-              },
-            ),
-            const SizedBox(height: 10),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Password',
-              ),
-              obscureText: true,
-              onChanged: (value) {
-                setState(() {
-                  password = value;
-                });
-              },
-            ),
-            if (currentForm == FormType.register) ...[
-              const SizedBox(height: 10),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Confirm Password',
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(100, 255, 255, 255),
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: IntrinsicHeight(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  currentForm == FormType.login
+                      ? 'Log in to your account'
+                      : 'Create a new account',
+                  style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
-                obscureText: true,
-                onChanged: (value) {
-                  setState(() {
-                    confirmPassword = value;
-                  });
-                },
-              ),
-            ],
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (currentForm == FormType.login) {
-                  _login();
-                } else {
-                  _register();
-                }
-              },
-              child: const Text('Submit'),
+                const SizedBox(height: 20),
+                TextFormField(
+                  decoration: const InputDecoration(
+                      labelText: 'Username',
+                      labelStyle: TextStyle(color: Colors.white)),
+                  cursorColor: Colors.white,
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (value) {
+                    setState(() {
+                      username = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  decoration: const InputDecoration(
+                      labelText: 'Password',
+                      labelStyle: TextStyle(color: Colors.white)),
+                  cursorColor: Colors.white,
+                  style: const TextStyle(color: Colors.white),
+                  obscureText: true,
+                  onChanged: (value) {
+                    setState(() {
+                      password = value;
+                    });
+                  },
+                ),
+                if (currentForm == FormType.register) ...[
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                        labelText: 'Confirm Password',
+                        labelStyle: TextStyle(color: Colors.white)),
+                    style: const TextStyle(color: Colors.white),
+                    cursorColor: Colors.white,
+                    obscureText: true,
+                    onChanged: (value) {
+                      setState(() {
+                        confirmPassword = value;
+                      });
+                    },
+                  ),
+                ],
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    if (currentForm == FormType.login) {
+                      _login();
+                    } else {
+                      _register();
+                    }
+                  },
+                  child: const Text('Submit'),
+                ),
+                TextButton(
+                  onPressed: switchForm,
+                  child: Text(
+                      currentForm == FormType.login ? 'Register' : 'Login'),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: switchForm,
-              child: Text(currentForm == FormType.login ? 'Register' : 'Login'),
-            ),
-          ],
+          ),
         ),
       ),
     );
