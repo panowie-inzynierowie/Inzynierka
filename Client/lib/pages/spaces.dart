@@ -40,8 +40,6 @@ class SpacesPageState extends State<SpacesPage> {
       List<Space> spaces = data.map((item) => Space.fromJson(item)).toList();
       return spaces;
     } else {
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
       throw Exception('Failed to load spaces');
     }
   }
@@ -55,7 +53,6 @@ class SpacesPageState extends State<SpacesPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            print('Error: ${snapshot.error}');
             return const Center(child: Text('Błąd wczytywania danych'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('Brak dostępnych przestrzeni'));
@@ -96,7 +93,7 @@ class SpacesPageState extends State<SpacesPage> {
             });
           }
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.chat),
       ),
     );
   }

@@ -15,10 +15,10 @@ class SpaceDetailsPage extends StatefulWidget {
   const SpaceDetailsPage({required this.space, Key? key}) : super(key: key);
 
   @override
-  _SpaceDetailsPageState createState() => _SpaceDetailsPageState();
+  SpaceDetailsPageState createState() => SpaceDetailsPageState();
 }
 
-class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
+class SpaceDetailsPageState extends State<SpaceDetailsPage> {
   late Future<List<Device>> _devicesFuture;
 
   @override
@@ -44,8 +44,6 @@ class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
       log('Response data: $data'); // Print the data to verify
       return data.map((item) => Device.fromJson(item)).toList();
     } else {
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
       throw Exception('Failed to load devices');
     }
   }
@@ -68,7 +66,6 @@ class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            print('Error: ${snapshot.error}');
             return const Center(child: Text('Błąd wczytywania danych'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('Brak dostępnych urządzeń'));
@@ -104,7 +101,7 @@ class _SpaceDetailsPageState extends State<SpaceDetailsPage> {
             refreshDevices();
           }
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.chat),
       ),
     );
   }

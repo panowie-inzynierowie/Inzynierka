@@ -16,10 +16,10 @@ class DeviceDetailsPage extends StatefulWidget {
   const DeviceDetailsPage({required this.device, Key? key}) : super(key: key);
 
   @override
-  _DeviceDetailsPageState createState() => _DeviceDetailsPageState();
+  DeviceDetailsPageState createState() => DeviceDetailsPageState();
 }
 
-class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
+class DeviceDetailsPageState extends State<DeviceDetailsPage> {
   late Future<List<Command>> _commandsFuture;
 
   @override
@@ -45,8 +45,6 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
       log('Response data: $data'); // Print the data to verify
       return data.map((item) => Command.fromJson(item)).toList();
     } else {
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
       throw Exception('Failed to load commands');
     }
   }
@@ -69,7 +67,6 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            print('Error: ${snapshot.error}');
             return const Center(child: Text('Błąd wczytywania danych'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('Brak dostępnych komend'));
@@ -112,7 +109,7 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
             refreshCommands();
           }
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.chat),
       ),
     );
   }
