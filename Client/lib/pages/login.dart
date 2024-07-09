@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; //https://pub.dev/packages/flutter_secure_storage
 
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
@@ -22,6 +23,25 @@ class _LoginPageState extends State<LoginPage> {
   String password = '';
   String confirmPassword = '';
   FormType currentForm = FormType.login;
+  final storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCredentials();
+  }
+
+  void _loadCredentials() async {
+    final String username = await storage.read(key: "username") ?? '';
+    final String password = await storage.read(key: "password") ?? '';
+    setState(() {
+      this.username = username;
+      this.password = password;
+    });
+    if (username.isNotEmpty && password.isNotEmpty) {
+      _login();
+    }
+  }
 
   void switchForm() {
     setState(() {
@@ -41,8 +61,10 @@ class _LoginPageState extends State<LoginPage> {
         'password': password,
       }),
     );
-    if (!mounted) return;
     if (response.statusCode == 200) {
+      await storage.write(key: "username", value: username);
+      await storage.write(key: "password", value: password);
+      if (!mounted) return;
       context.read<AppState>().setUsername(username);
       context
           .read<AppState>()
@@ -55,6 +77,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Failed to log in')));
     }
