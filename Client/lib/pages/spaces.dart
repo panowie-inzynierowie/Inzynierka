@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
-import 'space_details.dart'; // Assuming you have a SpaceDetailsPage in space_details.dart
-import 'create_space.dart'; // Assuming you have a CreateSpacePage in create_space.dart
+import 'space_details.dart';
 import 'package:inzynierka_client/state/state.dart';
 import '../classes/space.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -78,22 +77,6 @@ class SpacesPageState extends State<SpacesPage> {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CreateSpacePage(),
-            ),
-          );
-          if (result == true) {
-            setState(() {
-              _spacesFuture = fetchSpaces(); // Refresh the spaces list
-            });
-          }
-        },
-        child: const Icon(Icons.chat),
       ),
     );
   }

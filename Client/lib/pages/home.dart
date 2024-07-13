@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:inzynierka_client/chat.dart';
 import 'package:inzynierka_client/pages/commands.dart';
 import 'package:inzynierka_client/pages/spaces.dart';
 import 'package:inzynierka_client/state/state.dart';
@@ -45,6 +46,18 @@ class HomePageState extends State<HomePage> {
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return const Dialog(
+                  child: ChatDialog(),
+                );
+              });
+        },
+        child: const Icon(Icons.chat),
       ),
     );
   }
