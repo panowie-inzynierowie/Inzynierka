@@ -3,6 +3,7 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -15,12 +16,24 @@ if not OPENAI_API_KEY or not MODEL:
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-def get_response(prompt):
-    response = client.chat.completions.create(
+class Command(BaseModel):
+    triggering_action: str
+    device_affected: str
+    action_to_perform: str
+
+
+class CommandsResponse(BaseModel):
+    commands: list[Command]
+
+
+def get_structured_response(prompt, response_format=CommandsResponse):
+    response = client.beta.chat.completions.parse(
         model=MODEL,
         messages=[
-            {"role": "system", "content": "Return ONLY VALID JSON"},
+            {"role": "system", "content": "You are brain of home automation system."},
             {"role": "user", "content": prompt},
         ],
+        response_format=response_format,
     )
-    return response.choices[0].message.content
+    content = response.choices[0].message.parsed
+    return content

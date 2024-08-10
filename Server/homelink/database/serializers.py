@@ -4,7 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from .models import *
-from .llm import get_response
+from .llm import get_structured_response, CommandsResponse
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -70,20 +70,17 @@ def create_command(validated_data, device):
 
     prompt = (
         f"These are available devices with their descriptions and data: {json.dumps(devices_data)}"
-        f"New device is being added, with data: {json.dumps({'name': validated_data['name'], 'description': validated_data['description']})}"
-        f"can you create any commands based on current devices and new device being added?"
-        "Command is an action that should be triggered in case of any event that matches criteria described in descriptions of devices provided by user,"
-        "if you can't find any matching command return empty array in JSON format, if there are commands return them in JSON with fields: triggering_action, device_affected, action_to_perform."
-        "Do not return anything else than valid JSON"
+        f"New device is being added, with data: {json.dumps({'name': validated_data['name'], 'description': validated_data['description']})} "
+        f"Can you create any commands based on current devices and new device being added?"
+        "Command is an action that should be triggered in case of any event that matches criteria described in descriptions of devices provided by user. "
+        "Return possible commands."
     )
 
-    if data := get_response(prompt):
-        data = json.loads(data)
-        try:
-            for command in data:
-                new_command = Command.objects.create(
-                    author=validated_data["owner"], description=command
-                )
-                new_command.devices.add(device)
-        except Exception as e:
-            print(e)
+    if data := get_structured_response(prompt, CommandsResponse):
+        data: CommandsResponse
+        for command in data.commands:
+            c = Command.objects.create(
+                author=validated_data["owner"],
+                description=f"{command.triggering_action} -> {command.action_to_perform} ({command.device_affected})",
+            )
+            c.devices.add(device)
