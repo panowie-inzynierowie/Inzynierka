@@ -14,5 +14,4 @@ urlpatterns = [
     ),
     path("commands/add/", CommandViewSet.as_view({"post": "create"})),
     path("commands/get/", CommandViewSet.as_view({"get": "list"})),
-    path("device/trigger/", DeviceViewSet.as_view({"post": "trigger"})),
 ]

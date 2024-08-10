@@ -7,7 +7,6 @@ from rest_framework.response import Response
 
 from .models import *
 from .serializers import *
-from .llm import get_response
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -41,14 +40,14 @@ class DeviceViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         space_id = self.request.data.get("space_id")
-        print(f"Received space_id: {space_id}")  # Log the space_id
+        print(f"Received space_id: {space_id}")
 
         try:
             space = Space.objects.get(id=space_id)
-            print(f"Found space: {space}")  # Log the found space
+            print(f"Found space: {space}")
             serializer.save(owner=self.request.user)
         except Space.DoesNotExist:
-            print(f"Space with id {space_id} does not exist")  # Log the error
+            print(f"Space with id {space_id} does not exist")
             return Response(
                 {"error": "Invalid space ID"}, status=status.HTTP_400_BAD_REQUEST
             )
@@ -57,20 +56,6 @@ class DeviceViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-    def trigger(self, request):
-        device = Device.objects.get(id=request.data.get("device_id"))
-        commands = [
-            {"key": c.pk, "details": c.description}
-            for c in Command.objects.filter(devices=device)
-        ]
-        response = get_response(
-            f"These are avaialable commands: {json.dumps(commands)} "
-            f"And there is an incoming request from device with name {device.name}: {request.data.get('action')}"
-            "are there any matching commands to be triggered? if yes, return valid JSON with array of actions to perform, "
-            "every item has fields: device, action. If no return empty array, do not return anything else than a valid JSON"
-        )
-        return Response(json.loads(response))
 
 
 class SpaceViewSet(viewsets.ModelViewSet):
@@ -91,4 +76,3 @@ class CommandViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
