@@ -105,6 +105,12 @@ class _LoginPageState extends State<LoginPage> {
       context
           .read<AppState>()
           .setToken(json.decoder.convert(response.body)['token']);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const HomePage(),
+        ),
+      );
     } else {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Failed to register')));
