@@ -57,9 +57,9 @@ class _CommandsPageState extends State<CommandsPage> {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             print('Error: ${snapshot.error}');
-            return const Center(child: Text('Błąd wczytywania danych'));
+            return const Center(child: Text('Failed to load data'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Brak dostępnych komend'));
+            return const Center(child: Text('No commands found'));
           }
 
           final commands = snapshot.data!;

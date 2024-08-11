@@ -52,9 +52,9 @@ class SpacesPageState extends State<SpacesPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return const Center(child: Text('Błąd wczytywania danych'));
+            return const Center(child: Text('Failed to load data'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Brak dostępnych przestrzeni'));
+            return const Center(child: Text('No spaces found'));
           }
 
           final spaces = snapshot.data!;

@@ -66,9 +66,9 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return const Center(child: Text('Błąd wczytywania danych'));
+            return const Center(child: Text('Failed to load data'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Brak dostępnych urządzeń'));
+            return const Center(child: Text('No devices found'));
           }
 
           final devices = snapshot.data!
