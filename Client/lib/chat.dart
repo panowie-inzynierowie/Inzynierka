@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
+
 import 'package:inzynierka_client/classes/chat.dart';
+import 'package:inzynierka_client/state/state.dart';
 
 class ChatDialog extends StatefulWidget {
   const ChatDialog({Key? key}) : super(key: key);
@@ -9,14 +13,18 @@ class ChatDialog extends StatefulWidget {
 }
 
 class ChatDialogState extends State<ChatDialog> {
-  List<ChatMessage> messages = [
-    ChatMessage(content: "Hello", author: Author.llm),
-  ];
+  List<ChatMessage> messages = [];
   final fieldText = TextEditingController();
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    messages = context.watch<AppState>().chatMessages;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    double maxWidth = MediaQuery.of(context).size.width * 0.8;
+    double maxWidth = MediaQuery.of(context).size.width * 0.7;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -40,7 +48,7 @@ class ChatDialogState extends State<ChatDialog> {
                         children: [
                           Text(
                             message.author == Author.user
-                                ? 'get user from state'
+                                ? context.watch<AppState>().username
                                 : 'System',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
