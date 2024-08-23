@@ -32,7 +32,11 @@ class Command(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     devices = models.ManyToManyField(Device, related_name="commands")
 
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
+    data = models.JSONField()
 
-    repeat_interval = models.IntegerField(null=True, blank=True, db_index=True)
     scheduled_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    repeat_interval = models.DurationField(null=True, blank=True)
+
+    def get_next_scheduled_at(self):
+        return self.scheduled_at + self.repeat_interval
