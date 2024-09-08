@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:inzynierka_client/chat.dart';
 import 'package:inzynierka_client/pages/commands.dart';
+import 'package:inzynierka_client/pages/create_device.dart';
 import 'package:inzynierka_client/pages/spaces.dart';
 import 'package:inzynierka_client/state/state.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +19,9 @@ class HomePageState extends State<HomePage> {
   static const List<Widget> _pages = <Widget>[
     SpacesPage(),
     CommandsPage(),
+    CreateDevicePage(
+      spaceId: null,
+    )
   ];
 
   void _onItemTapped(int index) {
@@ -43,6 +47,10 @@ class HomePageState extends State<HomePage> {
             icon: Icon(Icons.list),
             label: 'All commands',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add),
+            label: 'Add device',
+          )
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

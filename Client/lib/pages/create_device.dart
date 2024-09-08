@@ -4,9 +4,10 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:wifi_scan/wifi_scan.dart';
 
 class CreateDevicePage extends StatefulWidget {
-  final int spaceId;
+  final int? spaceId;
 
   const CreateDevicePage({required this.spaceId, Key? key}) : super(key: key);
 
@@ -20,6 +21,41 @@ class _CreateDevicePageState extends State<CreateDevicePage> {
       TextEditingController();
   String? _errorMessage;
 
+  List<WiFiAccessPoint> aps = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _getScannedResults(context);
+  }
+
+  Future<void> _getScannedResults(BuildContext content) async {
+    if (await _canGetScannedResults(context)) {
+      final results = await WiFiScan.instance.getScannedResults();
+      setState(() {
+        aps = results;
+      });
+    }
+  }
+
+  Future<bool> _canGetScannedResults(BuildContext context) async {
+    final can = await WiFiScan.instance.canGetScannedResults();
+    if (can != CanGetScannedResults.yes) {
+      if (context.mounted) {
+        if (can == CanGetScannedResults.noLocationServiceDisabled) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text(
+                    'Please allow and enable Location service then try again.')),
+          );
+        }
+      }
+      aps = <WiFiAccessPoint>[];
+      return false;
+    }
+    return true;
+  }
+
   void _createDevice() async {
     setState(() {
       _errorMessage = null; // Reset error message
@@ -31,7 +67,7 @@ class _CreateDevicePageState extends State<CreateDevicePage> {
       final payload = jsonEncode(<String, dynamic>{
         'name': _deviceNameController.text,
         'description': _deviceDescriptionController.text,
-        'space_id': widget.spaceId, // Include space_id in the payload
+        'space_id': widget.spaceId,
       });
 
       print('Request payload: $payload'); // Log the payload
@@ -66,9 +102,6 @@ class _CreateDevicePageState extends State<CreateDevicePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Create New Device'),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -80,6 +113,20 @@ class _CreateDevicePageState extends State<CreateDevicePage> {
             TextField(
               controller: _deviceDescriptionController,
               decoration: InputDecoration(labelText: 'Device Description'),
+            ),
+            Container(
+              height: 250,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: aps.length,
+                itemBuilder: (context, index) {
+                  final ap = aps[index];
+                  return ListTile(
+                    title: Text(ap.ssid),
+                    subtitle: Text('Tap to select'),
+                  );
+                },
+              ),
             ),
             if (_errorMessage != null) ...[
               SizedBox(height: 20),
