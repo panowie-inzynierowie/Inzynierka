@@ -3,6 +3,7 @@ import 'package:inzynierka_client/chat.dart';
 import 'package:inzynierka_client/pages/commands.dart';
 import 'package:inzynierka_client/pages/create_space.dart';
 import 'package:inzynierka_client/pages/profile_page.dart';
+import 'package:inzynierka_client/pages/create_device.dart';
 import 'package:inzynierka_client/pages/spaces.dart';
 import 'package:inzynierka_client/state/state.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,7 @@ class HomePageState extends State<HomePage> {
     SpacesPage(),
     CommandsPage(),
     CreateSpacePage(),
+    CreateDevicePage(spaceId: null),
     ProfilePage(),
   ];
 
@@ -37,14 +39,14 @@ class HomePageState extends State<HomePage> {
         title: Text(
           'Hello, ${context.watch<AppState>().username}',
           style: const TextStyle(
-            fontSize: 22,            // Larger font size for the title
+            fontSize: 22, // Larger font size for the title
             fontWeight: FontWeight.bold, // Bold title text
-            color: Colors.white,      // White text color for better contrast
+            color: Colors.white, // White text color for better contrast
           ),
         ),
         backgroundColor: Colors.blueAccent, // Custom background color
-        elevation: 2,                        // Add a slight shadow
-        centerTitle: true,                   // Center the title
+        elevation: 2, // Add a slight shadow
+        centerTitle: true, // Center the title
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -70,6 +72,10 @@ class HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.add),
             label: 'Add space',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.on_device_training),
+            label: 'Add Device',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
