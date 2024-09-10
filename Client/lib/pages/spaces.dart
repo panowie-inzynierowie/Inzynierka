@@ -60,19 +60,40 @@ class SpacesPageState extends State<SpacesPage> {
           final spaces = snapshot.data!;
           return ListView.builder(
             itemCount: spaces.length,
+            padding: const EdgeInsets.all(16.0),  // Add padding around the list
             itemBuilder: (context, index) {
               final space = spaces[index];
-              return ListTile(
-                title: Text(space.name),
-                subtitle: Text(space.description ?? ''),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SpaceDetailsPage(space: space),
+              return Card(
+                elevation: 4,  // Add a slight shadow effect
+                margin: const EdgeInsets.symmetric(vertical: 8.0),  // Add margin between cards
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),  // Rounded corners
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16.0),  // Add padding inside the ListTile
+                  leading: const Icon(Icons.home, size: 40, color: Colors.blueAccent),  // Add an icon
+                  title: Text(
+                    space.name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
-                  );
-                },
+                  ),
+                  subtitle: Text(
+                    space.description ?? 'No description available',
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.blueAccent),  // Add a trailing icon
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SpaceDetailsPage(space: space),
+                      ),
+                    );
+                  },
+                ),
               );
             },
           );

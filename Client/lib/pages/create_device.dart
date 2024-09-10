@@ -18,7 +18,7 @@ class CreateDevicePage extends StatefulWidget {
 class _CreateDevicePageState extends State<CreateDevicePage> {
   final TextEditingController _deviceNameController = TextEditingController();
   final TextEditingController _deviceDescriptionController =
-      TextEditingController();
+  TextEditingController();
   String? _errorMessage;
 
   List<WiFiAccessPoint> aps = [];
@@ -89,7 +89,7 @@ class _CreateDevicePageState extends State<CreateDevicePage> {
       } else {
         setState(() {
           _errorMessage =
-              'Failed to create device: ${response.reasonPhrase}\n${response.body}';
+          'Failed to create device: ${response.reasonPhrase}\n${response.body}';
         });
       }
     } catch (e) {
@@ -102,43 +102,105 @@ class _CreateDevicePageState extends State<CreateDevicePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create New Device'),
+        backgroundColor: Colors.blueAccent, // Custom AppBar color
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Device Name Input
             TextField(
               controller: _deviceNameController,
-              decoration: InputDecoration(labelText: 'Device Name'),
+              decoration: InputDecoration(
+                labelText: 'Device Name',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+              ),
+              style: const TextStyle(fontSize: 16),
             ),
+            const SizedBox(height: 16),
+
+            // Device Description Input
             TextField(
               controller: _deviceDescriptionController,
-              decoration: InputDecoration(labelText: 'Device Description'),
+              decoration: InputDecoration(
+                labelText: 'Device Description',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+              ),
+              style: const TextStyle(fontSize: 16),
             ),
-            Container(
-              height: 250,
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: aps.length,
-                itemBuilder: (context, index) {
-                  final ap = aps[index];
-                  return ListTile(
-                    title: Text(ap.ssid),
-                    subtitle: Text('Tap to select'),
-                  );
-                },
+            const SizedBox(height: 20),
+
+            // Wi-Fi Networks List
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[100], // Light background for the list
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                child: ListView.builder(
+                  itemCount: aps.length,
+                  itemBuilder: (context, index) {
+                    final ap = aps[index];
+                    return Card(
+                      elevation: 4,
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 12.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: ListTile(
+                        title: Text(ap.ssid),
+                        subtitle: const Text('Tap to select'),
+                        onTap: () {
+                          // Handle tap to select Wi-Fi
+                        },
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
+
+            // Error Message
             if (_errorMessage != null) ...[
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
                 _errorMessage!,
-                style: TextStyle(color: Colors.red),
+                style: const TextStyle(color: Colors.red, fontSize: 16),
               ),
             ],
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _createDevice,
-              child: Text('Create'),
+
+            const SizedBox(height: 20),
+
+            // Create Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _createDevice,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                child: const Text('Create Device'),
+              ),
             ),
           ],
         ),

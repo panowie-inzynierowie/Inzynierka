@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
-
 import 'package:inzynierka_client/classes/chat.dart';
 import 'package:inzynierka_client/state/state.dart';
 
@@ -17,7 +15,6 @@ class ChatDialog extends StatefulWidget {
 class ChatDialogState extends State<ChatDialog> {
   List<ChatMessage> messages = [];
   final fieldText = TextEditingController();
-
   final SpeechToText _speechToText = SpeechToText();
   bool _listening = false;
 
@@ -67,74 +64,103 @@ class ChatDialogState extends State<ChatDialog> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final message = messages[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Row(
-                    mainAxisAlignment: message.author == Author.user
-                        ? MainAxisAlignment.end
-                        : MainAxisAlignment.start,
-                    children: [
-                      Column(
-                        crossAxisAlignment: message.author == Author.user
-                            ? CrossAxisAlignment.end
-                            : CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            message.author == Author.user
-                                ? context.watch<AppState>().username
-                                : 'System',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(
-                            width: maxWidth,
-                            child: Text(
-                              message.content,
-                            ),
-                          ),
-                        ],
+                final isUser = message.author == Author.user;
+
+                return Align(
+                  alignment:
+                  isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 14),
+                    constraints: BoxConstraints(maxWidth: maxWidth),
+                    decoration: BoxDecoration(
+                      color: isUser
+                          ? Colors.blueAccent.withOpacity(0.7)
+                          : Colors.grey[300],
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(12),
+                        topRight: const Radius.circular(12),
+                        bottomLeft: Radius.circular(isUser ? 12 : 0),
+                        bottomRight: Radius.circular(isUser ? 0 : 12),
                       ),
-                    ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: isUser
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isUser
+                              ? context.watch<AppState>().username
+                              : 'System',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          message.content,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white, // Use white for user messages
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
             ),
           ),
-          SizedBox(
-            width: double.infinity,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: fieldText,
-                    decoration: const InputDecoration(
-                      labelText: 'New message',
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: fieldText,
+                  decoration: InputDecoration(
+                    labelText: 'New message',
+                    fillColor: Colors.grey[100],
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25.0),
+                      borderSide: BorderSide.none,
                     ),
-                    onFieldSubmitted: (value) {
-                      setState(
-                        () {
-                          messages.add(
-                              ChatMessage(author: Author.user, content: value));
-                        },
-                      );
-                      fieldText.clear();
-                    },
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 20,
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: _listening
-                      ? const Icon(Icons.mic_off)
-                      : const Icon(Icons.mic),
-                  onPressed: () {
-                    if (_speechToText.isListening) {
-                      _stopListening();
-                    } else {
-                      _startListening();
-                    }
+                  onFieldSubmitted: (value) {
+                    setState(
+                          () {
+                        messages.add(ChatMessage(
+                            author: Author.user, content: value));
+                      },
+                    );
+                    fieldText.clear();
                   },
-                )
-              ],
-            ),
-          )
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(
+                  _listening ? Icons.mic_off : Icons.mic,
+                  color: _listening ? Colors.red : Colors.blueAccent,
+                  size: 28,
+                ),
+                onPressed: () {
+                  if (_speechToText.isListening) {
+                    _stopListening();
+                  } else {
+                    _startListening();
+                  }
+                },
+              ),
+            ],
+          ),
         ],
       ),
     );

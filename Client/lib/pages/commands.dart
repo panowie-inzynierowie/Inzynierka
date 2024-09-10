@@ -64,21 +64,45 @@ class _CommandsPageState extends State<CommandsPage> {
 
           final commands = snapshot.data!;
           return ListView.builder(
+            padding: const EdgeInsets.all(16.0), // Add padding around the list
             itemCount: commands.length,
             itemBuilder: (context, index) {
               final command = commands[index];
-              return ListTile(
-                title: Text(command.description),
-                subtitle: Text('Scheduled at: ${command.scheduledAt}'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          CommandDetailsPage(command: command),
+              return Card(
+                elevation: 4, // Add shadow to the card
+                margin: const EdgeInsets.only(bottom: 16.0), // Add margin between cards
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0), // Rounded corners
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16.0), // Add padding inside the ListTile
+                  leading: const Icon(
+                    Icons.settings_remote, // Icon to represent commands
+                    color: Colors.blueAccent,
+                    size: 40,
+                  ),
+                  title: Text(
+                    command.description,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
-                  );
-                },
+                  ),
+                  subtitle: Text(
+                    'Scheduled at: ${command.scheduledAt}',
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.blueAccent),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CommandDetailsPage(command: command),
+                      ),
+                    );
+                  },
+                ),
               );
             },
           );
