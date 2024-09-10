@@ -58,24 +58,37 @@ class _CreateCommandPageState extends State<CreateCommandPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create New Command'),
+        title: const Text('Create New Command'),
+        backgroundColor: Colors.blueAccent,  // AppBar custom color
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Command Description Input
             TextField(
               controller: _descriptionController,
-              decoration: InputDecoration(labelText: 'Command Description'),
+              decoration: InputDecoration(
+                labelText: 'Command Description',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+              ),
+              style: const TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 10),
-            ElevatedButton(
+            const SizedBox(height: 20),
+
+            // Date Picker Button
+            ElevatedButton.icon(
               onPressed: () async {
                 final DateTime? picked = await showDatePicker(
                   context: context,
                   initialDate: DateTime.now(),
-                  firstDate: DateTime.now().subtract(Duration(days: 365)),
-                  lastDate: DateTime.now().add(Duration(days: 365)),
+                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
                 );
                 if (picked != null && picked != _scheduledAt) {
                   setState(() {
@@ -83,21 +96,46 @@ class _CreateCommandPageState extends State<CreateCommandPage> {
                   });
                 }
               },
-              child: Text(_scheduledAt == null
-                  ? 'Select Date'
-                  : 'Selected Date: ${_scheduledAt!.toLocal()}'),
+              icon: const Icon(Icons.calendar_today),
+              label: Text(
+                _scheduledAt == null
+                    ? 'Select Date'
+                    : 'Selected Date: ${_scheduledAt!.toLocal()}',
+              ),
+              style: ElevatedButton.styleFrom(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                textStyle: const TextStyle(fontSize: 16),
+                backgroundColor: Colors.blueAccent,  // Updated button color
+              ),
             ),
+
+            // Error Message
             if (_errorMessage != null) ...[
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
                 _errorMessage!,
-                style: TextStyle(color: Colors.red),
+                style: const TextStyle(color: Colors.red, fontSize: 16),
               ),
             ],
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _createCommand,
-              child: Text('Create'),
+
+            const Spacer(), // Pushes the create button to the bottom
+
+            // Create Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _createCommand,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,  // Updated button color
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+                child: const Text('Create Command'),
+              ),
             ),
           ],
         ),

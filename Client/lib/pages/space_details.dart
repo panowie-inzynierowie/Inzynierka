@@ -5,9 +5,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
-import 'create_device.dart'; // Assuming you have a CreateDevicePage
+import 'create_device.dart';
 import '../classes/device.dart';
 import '../classes/space.dart';
+import 'device_details.dart';  // Import the DeviceDetailsPage
 
 class SpaceDetailsPage extends StatefulWidget {
   final Space space;
@@ -75,21 +76,90 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
               .where((device) => device.spaceId == widget.space.id)
               .toList();
           return ListView.builder(
+            padding: const EdgeInsets.all(16.0),
             itemCount: devices.length,
             itemBuilder: (context, index) {
               final device = devices[index];
-              return ListTile(
-                title: Text(device.name),
-                subtitle: Text(device.description ?? ''),
-                onTap: () {
-                  // Navigate to device details or perform any action
-                },
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: const Offset(0, 3), // Changes position of shadow
+                    ),
+                  ],
+                ),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DeviceDetailsPage(device: device),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Icon(
+                          Icons.devices,  // You can change this to any relevant icon
+                          size: 40,
+                          color: Colors.blueAccent,
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                device.name,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                device.description ?? 'No description available',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_forward_ios, color: Colors.blueAccent),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DeviceDetailsPage(device: device),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.blueAccent,  // Customize FAB color
         onPressed: () async {
           final result = await Navigator.push(
             context,
@@ -101,7 +171,7 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
             refreshDevices();
           }
         },
-        child: const Icon(Icons.chat),
+        child: const Icon(Icons.add),
       ),
     );
   }

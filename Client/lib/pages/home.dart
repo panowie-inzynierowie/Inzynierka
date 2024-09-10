@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:inzynierka_client/chat.dart';
 import 'package:inzynierka_client/pages/commands.dart';
-import 'package:inzynierka_client/pages/create_device.dart';
+import 'package:inzynierka_client/pages/create_space.dart';
+import 'package:inzynierka_client/pages/profile_page.dart';
 import 'package:inzynierka_client/pages/spaces.dart';
 import 'package:inzynierka_client/state/state.dart';
 import 'package:provider/provider.dart';
@@ -19,9 +20,8 @@ class HomePageState extends State<HomePage> {
   static const List<Widget> _pages = <Widget>[
     SpacesPage(),
     CommandsPage(),
-    CreateDevicePage(
-      spaceId: null,
-    )
+    CreateSpacePage(),
+    ProfilePage(),
   ];
 
   void _onItemTapped(int index) {
@@ -34,7 +34,27 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Hello ${context.watch<AppState>().username}'),
+        title: Text(
+          'Hello, ${context.watch<AppState>().username}',
+          style: const TextStyle(
+            fontSize: 22,            // Larger font size for the title
+            fontWeight: FontWeight.bold, // Bold title text
+            color: Colors.white,      // White text color for better contrast
+          ),
+        ),
+        backgroundColor: Colors.blueAccent, // Custom background color
+        elevation: 2,                        // Add a slight shadow
+        centerTitle: true,                   // Center the title
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              // Add functionality for notification icon
+            },
+            tooltip: 'Notifications', // Tooltip for accessibility
+          ),
+        ],
+        automaticallyImplyLeading: false, // Remove back button
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -49,11 +69,18 @@ class HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add),
-            label: 'Add device',
-          )
+            label: 'Add space',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        backgroundColor: Colors.blueAccent,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.grey[400],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -65,6 +92,7 @@ class HomePageState extends State<HomePage> {
                 );
               });
         },
+        backgroundColor: Colors.blueAccent, // Match FAB color to theme
         child: const Icon(Icons.chat),
       ),
     );
