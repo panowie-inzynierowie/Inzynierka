@@ -1,4 +1,5 @@
-from .models import *
+from .models.models import *
+from .models.auth import CustomUser
 from django.contrib import admin
 
 
@@ -24,3 +25,10 @@ class CommandAdmin(admin.ModelAdmin):
     search_fields = ["description", "author__username"]
     autocomplete_fields = ["author", "devices"]
     list_filter = ["author", "scheduled_at"]
+
+
+@admin.register(CustomUser)
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = ["username", "is_device"]
+    search_fields = ["username"]
+    list_filter = ["is_device"]

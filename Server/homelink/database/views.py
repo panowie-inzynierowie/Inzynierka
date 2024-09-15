@@ -1,12 +1,15 @@
 import json
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework import viewsets
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
-from .models import *
+from .models.models import *
 from .serializers import *
+
+
+User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
