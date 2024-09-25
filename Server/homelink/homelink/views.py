@@ -20,6 +20,12 @@ class CreateUserView(CreateAPIView):
         token, _ = Token.objects.get_or_create(
             user=get_user_model().objects.get(username=serializer.data["username"])
         )
+        if request.data.get("user"):
+            created = serializer.instance
+            created.owner = get_user_model().objects.get(username=request.data["user"])
+            created.is_device = True
+            created.save()
+
         return Response(
             {**serializer.data, "token": token.key},
             status=status.HTTP_201_CREATED,
