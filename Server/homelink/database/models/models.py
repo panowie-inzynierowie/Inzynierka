@@ -21,6 +21,13 @@ class Device(models.Model):
     description = models.TextField(null=True, blank=True)
     data = models.JSONField(null=True, blank=True)
 
+    account = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="account_devices",
+        null=True,
+        blank=True,
+    )
     added_at = models.DateTimeField(auto_now_add=True)
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="devices")
