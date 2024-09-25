@@ -30,21 +30,21 @@ class SpaceSerializer(serializers.ModelSerializer):
 
 class DeviceSerializer(serializers.ModelSerializer):
     space = SpaceSerializer(read_only=True)
-    space_id = serializers.IntegerField(write_only=True)
+    space_id = serializers.IntegerField(write_only=True, required=False)
     owner = serializers.ReadOnlyField(source="owner.username")
 
     class Meta:
         model = Device
-        fields = ["id", "name", "description", "space", "space_id", "owner"]
-
-    def create(self, validated_data):
-        space_id = validated_data.pop("space_id")
-        space = Space.objects.get(id=space_id)
-        validated_data["space"] = space
-        device = Device.objects.create(**validated_data)
-
-        create_command(validated_data, device)
-        return device
+        fields = [
+            "id",
+            "name",
+            "description",
+            "space",
+            "space_id",
+            "owner",
+            "data",
+            "account",
+        ]
 
 
 class CommandSerializer(serializers.ModelSerializer):
