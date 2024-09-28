@@ -1,5 +1,10 @@
 from django.urls import path
 from .views import *
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+
+router.register("commands", CommandViewSet, basename="routed-commands")
 
 
 urlpatterns = [
@@ -15,3 +20,5 @@ urlpatterns = [
     path("commands/add/", CommandViewSet.as_view({"post": "create"})),
     path("commands/get/", CommandViewSet.as_view({"get": "list"})),
 ]
+
+urlpatterns += router.urls

@@ -55,7 +55,7 @@ class CommandSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Command
-        fields = ["id", "description", "scheduled_at", "device_ids", "devices"]
+        fields = ["id", "description", "scheduled_at", "device_ids", "devices", "data"]
 
     def create(self, validated_data):
         device_ids = validated_data.pop("device_ids", [])

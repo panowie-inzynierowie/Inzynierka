@@ -1,14 +1,11 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
-import 'create_device.dart';
 import '../classes/device.dart';
 import '../classes/space.dart';
-import 'device_details.dart';  // Import the DeviceDetailsPage
 
 class SpaceDetailsPage extends StatefulWidget {
   final Space space;
@@ -41,137 +38,115 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as List;
-      log('Pobrane dane:');
-      log('Response data: $data'); // Print the data to verify
+      print(data[0]);
       return data.map((item) => Device.fromJson(item)).toList();
     } else {
       throw Exception('Failed to load devices');
     }
   }
 
-  void refreshDevices() {
-    setState(() {
-      _devicesFuture = fetchDevices();
-    });
+  void performAction(int deviceId, String componentName, String action) async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+
+    final response = await http.post(
+      Uri.parse('${dotenv.env['API_URL']}/api/commands/add/'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Token $token',
+      },
+      body: jsonEncode({
+        'device_ids': [deviceId],
+        'data': [
+          {
+            "name": componentName,
+            "actions": [action]
+          }
+        ],
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Action performed successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to perform action')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.space.name),
-      ),
+      appBar: AppBar(title: Text(widget.space.name)),
       body: FutureBuilder<List<Device>>(
         future: _devicesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return const Center(child: Text('Failed to load data'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No devices found'));
-          }
-
-          final devices = snapshot.data!
-              .where((device) => device.spaceId == widget.space.id)
-              .toList();
-          return ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: devices.length,
-            itemBuilder: (context, index) {
-              final device = devices[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: const Offset(0, 3), // Changes position of shadow
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (snapshot.hasData) {
+            return ListView.builder(
+              itemCount: snapshot.data!.length,
+              itemBuilder: (context, index) {
+                final device = snapshot.data![index];
+                return Card(
+                  margin: EdgeInsets.all(8.0),
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          device.name,
+                        ),
+                        SizedBox(height: 8),
+                        if (device.data != null &&
+                            device.data!['components'] is List &&
+                            (device.data!['components'] as List).isNotEmpty)
+                          ...device.data!['components'].map((component) {
+                            if (component['actions'] is List) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    component['name'],
+                                  ),
+                                  Wrap(
+                                    spacing: 8.0,
+                                    runSpacing: 4.0,
+                                    children: (component['actions'] as List)
+                                        .map<Widget>((action) {
+                                      return ElevatedButton(
+                                        child: Text(action.toString()),
+                                        onPressed: () {
+                                          performAction(
+                                            device.id,
+                                            component['name'],
+                                            action,
+                                          );
+                                        },
+                                      );
+                                    }).toList(),
+                                  ),
+                                  SizedBox(height: 8),
+                                ],
+                              );
+                            }
+                            return SizedBox.shrink();
+                          }).toList(),
+                      ],
                     ),
-                  ],
-                ),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DeviceDetailsPage(device: device),
-                      ),
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Icon(
-                          Icons.devices,  // You can change this to any relevant icon
-                          size: 40,
-                          color: Colors.blueAccent,
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                device.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                device.description ?? 'No description available',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_forward_ios, color: Colors.blueAccent),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  DeviceDetailsPage(device: device),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
                   ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blueAccent,  // Customize FAB color
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CreateDevicePage(spaceId: widget.space.id),
-            ),
-          );
-          if (result == true) {
-            refreshDevices();
+                );
+              },
+            );
+          } else {
+            return Center(child: Text('No devices found'));
           }
         },
-        child: const Icon(Icons.add),
       ),
     );
   }

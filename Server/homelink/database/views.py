@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import viewsets
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from django.db.models import Q
 
 from .models.models import *
 from .serializers import *
@@ -64,7 +65,9 @@ class CommandViewSet(viewsets.ModelViewSet):
     serializer_class = CommandSerializer
 
     def get_queryset(self):
-        return Command.objects.filter(devices__owner=self.request.user)
+        return Command.objects.filter(
+            Q(devices__owner=self.request.user) | Q(devices__account=self.request.user)
+        )
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
