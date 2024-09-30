@@ -19,6 +19,13 @@ class Space(models.Model):
 class Device(models.Model):
     name = models.TextField()
     description = models.TextField(null=True, blank=True)
+
+    # {
+    # "components":
+    # [{
+    # "name": "LED", "actions": ["on", "off", "toggle"]
+    # }]
+    # }
     data = models.JSONField(null=True, blank=True)
 
     account = models.ForeignKey(
@@ -42,6 +49,8 @@ class Command(models.Model):
     devices = models.ManyToManyField(Device, related_name="commands")
 
     description = models.TextField(null=True, blank=True)
+
+    # [{"name": componentName, "actions": [action]}]
     data = models.JSONField()
 
     scheduled_at = models.DateTimeField(null=True, blank=True, db_index=True)
@@ -49,3 +58,21 @@ class Command(models.Model):
 
     def get_next_scheduled_at(self):
         return self.scheduled_at + self.repeat_interval
+
+
+class CommandsLink(models.Model):
+    # [{
+    #     "device_id": deviceId,
+    #     "data": [{"name": componentName, "actions": [action]}],
+    #     "satisfied": false,
+    # }]
+    triggers = models.JSONField()
+
+    # if multiple triggers, define the maximum time that can pass between the first and the last being satisfied
+    ttl = models.DurationField(null=True, blank=True)
+
+    # [{
+    #     "device_id": deviceId,
+    #     "data": [{"name": componentName, "actions": [action]}],
+    # }]
+    results = models.JSONField()
