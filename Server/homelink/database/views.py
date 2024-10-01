@@ -71,3 +71,6 @@ class CommandViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    def perform_destroy(self, instance):
+        return super().perform_destroy(instance)

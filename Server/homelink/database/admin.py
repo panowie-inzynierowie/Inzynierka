@@ -27,6 +27,11 @@ class CommandAdmin(admin.ModelAdmin):
     list_filter = ["author", "scheduled_at"]
 
 
+@admin.register(CommandsLink)
+class CommandsLink(admin.ModelAdmin):
+    list_display = ["ttl"]
+
+
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
     list_display = ["username", "is_device"]
