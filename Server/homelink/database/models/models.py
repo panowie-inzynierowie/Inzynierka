@@ -46,7 +46,7 @@ class Device(models.Model):
 
 class Command(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    devices = models.ManyToManyField(Device, related_name="commands")
+    device = models.ForeignKey(Device, on_delete=models.SET_NULL, null=True, blank=True)
 
     description = models.TextField(null=True, blank=True)
 

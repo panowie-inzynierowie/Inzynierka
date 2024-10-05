@@ -23,7 +23,7 @@ class DeviceAdmin(admin.ModelAdmin):
 class CommandAdmin(admin.ModelAdmin):
     list_display = ["author", "description", "repeat_interval", "scheduled_at"]
     search_fields = ["description", "author__username"]
-    autocomplete_fields = ["author", "devices"]
+    autocomplete_fields = ["author", "device"]
     list_filter = ["author", "scheduled_at"]
 
 
