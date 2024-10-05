@@ -48,14 +48,9 @@ class DeviceSerializer(serializers.ModelSerializer):
 
 
 class CommandSerializer(serializers.ModelSerializer):
-    device_ids = serializers.ListField(
-        child=serializers.IntegerField(), write_only=True
-    )
-    devices = DeviceSerializer(many=True, read_only=True)
-
-    class Meta:
+        class Meta:
         model = Command
-        fields = ["id", "description", "scheduled_at", "device_ids", "devices", "data"]
+        fields = ["id", "description", "scheduled_at", "device", "data"]
 
     def create(self, validated_data):
         device_ids = validated_data.pop("device_ids", [])

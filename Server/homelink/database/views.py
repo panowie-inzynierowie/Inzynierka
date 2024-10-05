@@ -66,7 +66,8 @@ class CommandViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Command.objects.filter(
-            Q(devices__owner=self.request.user) | Q(devices__account=self.request.user)
+            Q(device__owner=self.request.user.pk)
+| Q(device__account=self.request.user.pk)
         )
 
     def perform_create(self, serializer):
