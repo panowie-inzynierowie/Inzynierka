@@ -67,11 +67,12 @@ class CommandViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Command.objects.filter(
             Q(device__owner=self.request.user.pk)
-| Q(device__account=self.request.user.pk)
+            | Q(device__account=self.request.user.pk)
         )
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
     def perform_destroy(self, instance):
+        CommandsLink.check_triggers(instance.device.pk, instance.data)
         return super().perform_destroy(instance)
