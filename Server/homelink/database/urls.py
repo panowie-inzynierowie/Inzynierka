@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 
 router.register("commands", CommandViewSet, basename="routed-commands")
-
+router.register("commands-links", CommandsLinkViewSet, basename="commands-links")
 
 urlpatterns = [
     path("user/add/", UserViewSet.as_view({"post": "create"})),

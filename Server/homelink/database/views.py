@@ -76,3 +76,10 @@ class CommandViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         CommandsLink.check_triggers(instance.device.pk, instance.data)
         return super().perform_destroy(instance)
+
+
+class CommandsLinkViewSet(viewsets.ModelViewSet):
+    serializer_class = CommandsLinkSerializer
+
+    def get_queryset(self):
+        return CommandsLink.objects.filter(owner=self.request.user.pk)

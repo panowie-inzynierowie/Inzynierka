@@ -73,6 +73,7 @@ class CommandsLink(models.Model):
     # if multiple triggers, define the maximum time that can pass between the first and the last being satisfied
     ttl = models.DurationField(null=True, blank=True)
     started_at = models.DateTimeField(null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     # [{
     #     "device_id": deviceId,

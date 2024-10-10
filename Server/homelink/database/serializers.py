@@ -82,3 +82,9 @@ def create_command(validated_data, device):
                 description=f"{command.triggering_action} -> {command.action_to_perform} ({command.device_affected})",
             )
             c.devices.add(device)
+
+
+class CommandsLinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommandsLink
+        fields = ["id", "triggers", "results", "ttl"]
