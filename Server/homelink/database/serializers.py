@@ -87,4 +87,4 @@ def create_command(validated_data, device):
 class CommandsLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = CommandsLink
-        fields = ["id", "triggers", "results", "ttl"]
+        fields = ["id", "triggers", "results", "ttl", "owner"]

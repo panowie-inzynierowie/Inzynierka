@@ -83,3 +83,7 @@ class CommandsLinkViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return CommandsLink.objects.filter(owner=self.request.user.pk)
+
+    def create(self, request, *args, **kwargs):
+        request.data["owner"] = request.user.pk
+        return super().create(request, *args, **kwargs)

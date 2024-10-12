@@ -4,6 +4,7 @@ import 'package:inzynierka_client/pages/commands.dart';
 import 'package:inzynierka_client/pages/create_space.dart';
 import 'package:inzynierka_client/pages/profile_page.dart';
 import 'package:inzynierka_client/pages/create_device.dart';
+import 'package:inzynierka_client/pages/commands_links.dart';
 import 'package:inzynierka_client/pages/spaces.dart';
 import 'package:inzynierka_client/state/state.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,7 @@ class HomePageState extends State<HomePage> {
   static const List<Widget> _pages = <Widget>[
     SpacesPage(),
     CommandsPage(),
+    CreateLinksScreen(),
     CreateSpacePage(),
     CreateDevicePage(spaceId: null),
     ProfilePage(),
@@ -68,6 +70,10 @@ class HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
             label: 'All commands',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.link),
+            label: 'Links',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add),
