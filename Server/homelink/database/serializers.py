@@ -50,13 +50,7 @@ class DeviceSerializer(serializers.ModelSerializer):
 class CommandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Command
-        fields = ["id", "description", "scheduled_at", "device", "data"]
-
-    def create(self, validated_data):
-        device_ids = validated_data.pop("device_ids", [])
-        command = Command.objects.create(**validated_data)
-        command.devices.set(Device.objects.filter(id__in=device_ids))
-        return command
+        fields = ["id", "description", "scheduled_at", "device", "data", "self_execute"]
 
 
 def create_command(validated_data, device):

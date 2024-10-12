@@ -1,5 +1,5 @@
-import json
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets
 from rest_framework import viewsets, status
@@ -71,11 +71,30 @@ class CommandViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        serializer.save(
+            author=(
+                self.request.user.owner
+                if self.request.user.is_device
+                else self.request.user
+            ),
+            device=(  # device is creating command -> it doesn't know its PK -> go through account to get Device reference
+                serializer.validated_data["device"]
+                if serializer.validated_data.get("device")
+                else self.request.user.account_devices.first()
+            ),
+        )
 
     def perform_destroy(self, instance):
         CommandsLink.check_triggers(instance.device.pk, instance.data)
-        return super().perform_destroy(instance)
+        return super().perform_destroy(
+            instance
+        )  # TODO add `executed` flag or something instead of deleting
+
+
+@receiver(post_save, sender=Command)
+def command_post_save(sender, instance, created, **kwargs):
+    if created and instance.self_execute:
+        CommandViewSet().perform_destroy(instance)
 
 
 class CommandsLinkViewSet(viewsets.ModelViewSet):
