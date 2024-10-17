@@ -55,13 +55,8 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
         'Authorization': 'Token $token',
       },
       body: jsonEncode({
-        'device_ids': [deviceId],
-        'data': [
-          {
-            "name": componentName,
-            "actions": [action]
-          }
-        ],
+        'device': deviceId,
+        'data': {"name": componentName, "action": action}
       }),
     );
 
