@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:provider/provider.dart';
-import 'package:speech_to_text/speech_to_text.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:inzynierka_client/classes/chat.dart';
 import 'package:inzynierka_client/state/state.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
 
 class ChatDialog extends StatefulWidget {
   const ChatDialog({Key? key}) : super(key: key);
@@ -14,7 +17,7 @@ class ChatDialog extends StatefulWidget {
 
 class ChatDialogState extends State<ChatDialog> {
   List<ChatMessage> messages = [];
-  final fieldText = TextEditingController();
+  final TextEditingController fieldText = TextEditingController();
   final SpeechToText _speechToText = SpeechToText();
   bool _listening = false;
 
@@ -50,6 +53,40 @@ class ChatDialogState extends State<ChatDialog> {
 
   void _onSpeechResult(SpeechRecognitionResult result) {
     fieldText.value = TextEditingValue(text: result.recognizedWords);
+  }
+
+  // Send message to Django backend and get response from ChatGPT
+  Future<void> _sendMessage(String message) async {
+    final url = Uri.parse('${dotenv.env['API_URL']}/api/chat/');
+
+    setState(() {
+      messages.add(ChatMessage(author: Author.user, content: message));
+    });
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"prompt": message}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final chatResponse = data['response'];
+
+        // Add the response from the LLM (ChatGPT's reply) to the chat
+        setState(() {
+          messages.add(ChatMessage(author: Author.llm, content: chatResponse));  // Changed to Author.llm
+        });
+      } else {
+        throw Exception('Failed to load response');
+      }
+    } catch (e) {
+      // Handle any errors
+      setState(() {
+        messages.add(ChatMessage(author: Author.llm, content: "Error: $e"));  // Changed to Author.llm
+      });
+    }
   }
 
   @override
@@ -102,9 +139,9 @@ class ChatDialogState extends State<ChatDialog> {
                         const SizedBox(height: 5),
                         Text(
                           message.content,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
-                            color: Colors.white, // Use white for user messages
+                            color: isUser ? Colors.white : Colors.black87,
                           ),
                         ),
                       ],
@@ -134,12 +171,7 @@ class ChatDialogState extends State<ChatDialog> {
                     ),
                   ),
                   onFieldSubmitted: (value) {
-                    setState(
-                          () {
-                        messages.add(ChatMessage(
-                            author: Author.user, content: value));
-                      },
-                    );
+                    _sendMessage(value);  // Send message to backend
                     fieldText.clear();
                   },
                 ),

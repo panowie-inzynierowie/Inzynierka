@@ -1,7 +1,6 @@
 import json
 
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
 
 from .models.models import *
 from .llm import get_structured_response, CommandsResponse
