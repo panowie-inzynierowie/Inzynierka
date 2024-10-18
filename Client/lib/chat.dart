@@ -67,24 +67,23 @@ class ChatDialogState extends State<ChatDialog> {
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"prompt": message}),
+        body: jsonEncode({"prompt": message}),  // Send the prompt to the backend
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final chatResponse = data['response'];
+        final chatResponse = data['response'];  // This will be a string
 
-        // Add the response from the LLM (ChatGPT's reply) to the chat
+        // Add the system (LLM) response to the chat
         setState(() {
-          messages.add(ChatMessage(author: Author.llm, content: chatResponse));  // Changed to Author.llm
+          messages.add(ChatMessage(author: Author.llm, content: chatResponse));  // Display the LLM response
         });
       } else {
         throw Exception('Failed to load response');
       }
     } catch (e) {
-      // Handle any errors
       setState(() {
-        messages.add(ChatMessage(author: Author.llm, content: "Error: $e"));  // Changed to Author.llm
+        messages.add(ChatMessage(author: Author.llm, content: "Error: $e"));
       });
     }
   }

@@ -36,4 +36,5 @@ def get_structured_response(prompt, response_format=CommandsResponse):
         response_format=response_format,
     )
     content = response.choices[0].message.parsed
-    return content
+    print(str(content))
+    return str(content)
