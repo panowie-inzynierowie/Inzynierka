@@ -26,13 +26,13 @@ def movement_detector_handler(_):
 button = machine.Pin(14, machine.Pin.IN, machine.Pin.PULL_DOWN)
 button.irq(trigger=machine.Pin.IRQ_FALLING, handler=movement_detector_handler)
 
-
 SSID = None
 WIFI_PASSWORD = None
 SERVER_URL = None
 USERNAME = None
 PASSWORD = None
 ACCOUNT_ID = None
+HEADERS = None
 
 
 def get_conf_udp():
@@ -104,18 +104,8 @@ def register_pico():
         ACCOUNT_ID = response.json()["id"]
         USERNAME = device_name
         PASSWORD = PASSWORD
-        with open("conf.txt", "w") as file:
-            file.write(
-                json.dumps(
-                    {
-                        "wifi": {"ssid": SSID, "password": WIFI_PASSWORD},
-                        "server_url": SERVER_URL,
-                        "username": device_name,
-                        "password": PASSWORD,
-                        "account_id": ACCOUNT_ID,
-                    }
-                )
-            )
+        save_config()
+        set_auth_headers()
         print("Device registered successfully")
     else:
         print(
@@ -162,24 +152,18 @@ def get_commands():
     """
     while True:
         try:
-            headers = {"Content-Type": "application/json"}
-            auth_string = f"{USERNAME}:{PASSWORD}"
-            auth_bytes = auth_string.encode("ascii")
-            base64_bytes = ubinascii.b2a_base64(auth_bytes)
-            base64_auth = base64_bytes.decode("ascii").strip()
-            headers["Authorization"] = f"Basic {base64_auth}"
-
-            request = requests.get(SERVER_URL + f"/api/commands/get/", headers=headers)
+            request = requests.get(SERVER_URL + f"/api/commands/get/", headers=HEADERS)
             if request.status_code == 200:
                 data = request.json()
                 for command in data:
                     perform_actions(command["data"])
                     requests.delete(
-                        f"{SERVER_URL}/api/commands/{command['id']}/", headers=headers
+                        f"{SERVER_URL}/api/commands/{command['id']}/", headers=HEADERS
                     )
+                    sleep(1)
             else:
                 print("Failed to get commands. Status code:", request.status_code)
-            sleep(5)
+            sleep(1)
         except Exception as e:
             print("Exception", e)
             sleep(5)
@@ -191,15 +175,8 @@ def define_devices():
     DATA_PAYLOAD represents capabilities of the components attached to the PiPico.
     """
     DATA_PAYLOAD["account"] = ACCOUNT_ID
-    headers = {"Content-Type": "application/json"}
-    auth_string = f"{USERNAME}:{PASSWORD}"
-    auth_bytes = auth_string.encode("ascii")
-    base64_bytes = ubinascii.b2a_base64(auth_bytes)
-    base64_auth = base64_bytes.decode("ascii").strip()
-    headers["Authorization"] = f"Basic {base64_auth}"
-
     request = requests.post(
-        SERVER_URL + "/api/devices/add/", json=DATA_PAYLOAD, headers=headers
+        SERVER_URL + "/api/devices/add/", json=DATA_PAYLOAD, headers=HEADERS
     )
 
     if request.status_code == 201:
@@ -214,20 +191,12 @@ def create_command(data):
     Args:
         data ({"name": componentName, "action": action}): command data
     """
-    headers = {"Content-Type": "application/json"}
-    auth_string = f"{USERNAME}:{PASSWORD}"
-    auth_bytes = auth_string.encode("ascii")
-    base64_bytes = ubinascii.b2a_base64(auth_bytes)
-    base64_auth = base64_bytes.decode("ascii").strip()
-    headers["Authorization"] = f"Basic {base64_auth}"
-
     command_data = {
         "description": "Auto created",
         "data": data,
         "self_execute": True,
     }
-
-    requests.post(SERVER_URL + "/api/commands/", json=command_data, headers=headers)
+    requests.post(SERVER_URL + "/api/commands/", json=command_data, headers=HEADERS)
 
 
 def file_exists(filename):
@@ -260,22 +229,51 @@ def random_characters(length=12):
     return "".join(chars[random.getrandbits(6) % len(chars)] for _ in range(length))
 
 
-if __name__ == "__main__":
+def set_auth_headers():
+    global HEADERS
+    HEADERS = {"Content-Type": "application/json"}
+    auth_string = f"{USERNAME}:{PASSWORD}"
+    auth_bytes = auth_string.encode("ascii")
+    base64_bytes = ubinascii.b2a_base64(auth_bytes)
+    base64_auth = base64_bytes.decode("ascii").strip()
+    HEADERS["Authorization"] = f"Basic {base64_auth}"
+
+
+def save_config():
+    with open("conf.txt", "w") as file:
+        json.dump(
+            {
+                "wifi": {"ssid": SSID, "password": WIFI_PASSWORD},
+                "server_url": SERVER_URL,
+                "username": USERNAME,
+                "password": PASSWORD,
+                "account_id": ACCOUNT_ID,
+            },
+            file,
+        )
+
+
+def load_config():
+    global SSID, WIFI_PASSWORD, SERVER_URL, USERNAME, PASSWORD, ACCOUNT_ID
+    with open("conf.txt", "r") as file:
+        data = json.load(file)
+        SSID = data["wifi"]["ssid"]
+        WIFI_PASSWORD = data["wifi"]["password"]
+        SERVER_URL = data["server_url"]
+        USERNAME = data["username"]
+        PASSWORD = data["password"]
+        ACCOUNT_ID = data["account_id"]
+
+
+def main():
     registered = file_exists("conf.txt")
     print("registered: ", registered)
 
     if not registered:
         get_conf_udp()
     else:
-        with open("conf.txt", "r") as file:
-            data = file.read()
-            data = json.loads(data)
-            SSID = data["wifi"]["ssid"]
-            WIFI_PASSWORD = data["wifi"]["password"]
-            SERVER_URL = data["server_url"]
-            USERNAME = data["username"]
-            PASSWORD = data["password"]
-            ACCOUNT_ID = data["account_id"]
+        load_config()
+        set_auth_headers()
 
     connect_to_wifi()
 
@@ -284,3 +282,7 @@ if __name__ == "__main__":
         define_devices()
 
     get_commands()
+
+
+if __name__ == "__main__":
+    main()
