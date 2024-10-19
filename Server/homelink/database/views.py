@@ -67,7 +67,8 @@ class CommandViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Command.objects.filter(
             Q(device__owner=self.request.user.pk)
-            | Q(device__account=self.request.user.pk)
+            | Q(device__account=self.request.user.pk),
+            executed=False,
         )
 
     def perform_create(self, serializer):
@@ -84,11 +85,10 @@ class CommandViewSet(viewsets.ModelViewSet):
             ),
         )
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance: Command):
         CommandsLink.check_triggers(instance.device.pk, instance.data)
-        return super().perform_destroy(
-            instance
-        )  # TODO add `executed` flag or something instead of deleting
+        instance.executed = True
+        instance.save()
 
 
 @receiver(post_save, sender=Command)
