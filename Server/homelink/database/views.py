@@ -1,3 +1,6 @@
+import time
+import threading
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
@@ -89,6 +92,32 @@ class CommandViewSet(viewsets.ModelViewSet):
         CommandsLink.check_triggers(instance.device.pk, instance.data)
         instance.executed = True
         instance.save()
+
+    def list(self, request, *args, **kwargs):
+        timeout = 120
+        result = []
+        stop_event = threading.Event()
+
+        def check_queryset():
+            nonlocal result
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                queryset = self.get_queryset()
+                if queryset.exists():
+                    result = self.get_serializer(queryset, many=True).data
+                    stop_event.set()
+                    break
+                time.sleep(1)
+
+        thread = threading.Thread(target=check_queryset)
+        thread.start()
+
+        thread.join(timeout)
+
+        if not result:
+            return Response([])
+
+        return Response(result)
 
 
 @receiver(post_save, sender=Command)
