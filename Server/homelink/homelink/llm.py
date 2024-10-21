@@ -1,4 +1,5 @@
 import os
+import json
 
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -23,7 +24,7 @@ class Command(BaseModel):
 
 
 class CommandsResponse(BaseModel):
-    commands: list[Command]
+    commands: str
 
 
 def get_structured_response(prompt, response_format=CommandsResponse):
@@ -35,6 +36,10 @@ def get_structured_response(prompt, response_format=CommandsResponse):
         ],
         response_format=response_format,
     )
-    content = response.choices[0].message.parsed
-    print(str(content))
-    return str(content)
+    commands_response = response.choices[0].message.parsed.commands
+    print(commands_response)
+    commands_dict = json.loads(commands_response)
+    print(commands_dict)
+    response_string = commands_dict["response"]
+    print(response_string)
+    return response_string
