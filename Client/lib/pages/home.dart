@@ -21,7 +21,7 @@ class HomePageState extends State<HomePage> {
 
   static const List<Widget> _pages = <Widget>[
     SpacesPage(),
-    CommandsPage(),
+    // CommandsPage(),
     CreateLinksScreen(),
     CreateSpacePage(),
     CreateDevicePage(spaceId: null),
@@ -67,10 +67,10 @@ class HomePageState extends State<HomePage> {
             icon: Icon(Icons.home),
             label: 'Spaces',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'All commands',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.list),
+          //   label: 'All commands',
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.link),
             label: 'Links',

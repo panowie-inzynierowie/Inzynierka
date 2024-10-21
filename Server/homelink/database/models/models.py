@@ -57,6 +57,7 @@ class Command(models.Model):
     scheduled_at = models.DateTimeField(null=True, blank=True, db_index=True)
     repeat_interval = models.DurationField(null=True, blank=True)
     self_execute = models.BooleanField(default=False)
+    executed = models.BooleanField(default=False)
 
     def get_next_scheduled_at(self):
         return self.scheduled_at + self.repeat_interval

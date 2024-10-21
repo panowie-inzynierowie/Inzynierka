@@ -21,7 +21,14 @@ class DeviceAdmin(admin.ModelAdmin):
 
 @admin.register(Command)
 class CommandAdmin(admin.ModelAdmin):
-    list_display = ["author", "description", "repeat_interval", "scheduled_at"]
+    list_display = [
+        "author",
+        "executed",
+        "self_execute",
+        "description",
+        "repeat_interval",
+        "scheduled_at",
+    ]
     search_fields = ["description", "author__username"]
     autocomplete_fields = ["author", "device"]
     list_filter = ["author", "scheduled_at"]

@@ -19,6 +19,7 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
   List<Map<String, dynamic>> _triggers = [];
   List<Map<String, dynamic>> _results = [];
   String? _ttl;
+  CommandsLink? _editingLink;
 
   @override
   void initState() {
@@ -92,10 +93,102 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
     }
   }
 
+  Future<void> _updateLink(CommandsLink link) async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+    final response = await http.put(
+      Uri.parse('${dotenv.env['API_URL']}/api/commands-links/${link.id}/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'triggers': link.triggers,
+        'results': link.results,
+        'ttl': link.ttl,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Link updated successfully')),
+      );
+      _fetchLinks();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update link')),
+      );
+    }
+  }
+
+  Future<void> _deleteLink(CommandsLink link) async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+    final response = await http.delete(
+      Uri.parse('${dotenv.env['API_URL']}/api/commands-links/${link.id}/'),
+      headers: {
+        'Authorization': 'Token $token',
+      },
+    );
+
+    if (response.statusCode == 204) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Link deleted successfully')),
+      );
+      _fetchLinks();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete link')),
+      );
+    }
+  }
+
+  Future<void> _showDeleteConfirmation(CommandsLink link) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Link'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Are you sure you want to delete this link?'),
+                Text('This action cannot be undone.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Delete'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteLink(link);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editLink(CommandsLink link) {
+    setState(() {
+      _editingLink = link;
+      _triggers = List.from(link.triggers);
+      _results = List.from(link.results);
+      _ttl = link.ttl;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Create Links')),
+      appBar: AppBar(title: Text('Manage Links')),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -119,6 +212,19 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
             if (link.ttl != null) Text('TTL: ${link.ttl}'),
           ],
         ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () => _editLink(link),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () => _showDeleteConfirmation(link),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -130,7 +236,7 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Create New Link'),
+            Text(_editingLink == null ? 'Create New Link' : 'Edit Link'),
             SizedBox(height: 16),
             Text('Triggers:'),
             ..._buildTriggersList(),
@@ -153,6 +259,7 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
                   SizedBox(width: 8),
                   Expanded(
                     child: TextFormField(
+                      initialValue: _ttl,
                       decoration: InputDecoration(
                         hintText: 'e.g., 1 00:00:00 for 1 day',
                       ),
@@ -167,9 +274,38 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
               ),
             SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _createLink,
-              child: Text('Create Link'),
+              onPressed: () {
+                if (_editingLink == null) {
+                  _createLink();
+                } else {
+                  _updateLink(CommandsLink(
+                    id: _editingLink!.id,
+                    triggers: _triggers,
+                    results: _results,
+                    ttl: _ttl,
+                  ));
+                  setState(() {
+                    _editingLink = null;
+                    _triggers = [];
+                    _results = [];
+                    _ttl = null;
+                  });
+                }
+              },
+              child: Text(_editingLink == null ? 'Create Link' : 'Update Link'),
             ),
+            if (_editingLink != null)
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _editingLink = null;
+                    _triggers = [];
+                    _results = [];
+                    _ttl = null;
+                  });
+                },
+                child: Text('Cancel Edit'),
+              ),
           ],
         ),
       ),

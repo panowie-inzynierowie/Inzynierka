@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/pages/login.dart';
-import 'package:inzynierka_client/pages/home.dart'; // Import HomePage
+import 'package:inzynierka_client/pages/home.dart';
 import 'package:inzynierka_client/state/state.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -26,11 +26,12 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/login',  // Set the initial route
+      initialRoute: '/login',
       routes: {
-        '/login': (context) => const LoginPage(),  // Named route for LoginPage
-        '/home': (context) => const HomePage(),    // Named route for HomePage
+        '/login': (context) => const LoginPage(),
+        '/home': (context) => const HomePage(),
       },
+      debugShowCheckedModeBanner: false,
     );
   }
 }
