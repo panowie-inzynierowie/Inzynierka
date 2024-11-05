@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'space_details.dart';
 import 'package:inzynierka_client/state/state.dart';
 import '../classes/space.dart';
+import '../classes/device.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SpacesPage extends StatefulWidget {
@@ -16,11 +17,13 @@ class SpacesPage extends StatefulWidget {
 
 class SpacesPageState extends State<SpacesPage> {
   late Future<List<Space>> _spacesFuture;
+  late Future<List<Device>> _spacelessDevicesFuture;
 
   @override
   void initState() {
     super.initState();
     _spacesFuture = fetchSpaces();
+    _spacelessDevicesFuture = fetchSpacelessDevices();
   }
 
   Future<List<Space>> fetchSpaces() async {
@@ -43,61 +46,238 @@ class SpacesPageState extends State<SpacesPage> {
     }
   }
 
+  Future<List<Device>> fetchSpacelessDevices() async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+
+    final response = await http.get(
+      Uri.parse('${dotenv.env['API_URL']}/api/devices/get/?spaceless=True'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Token $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as List;
+      return data.map((item) => Device.fromJson(item)).toList();
+    } else {
+      throw Exception('Failed to load spaceless devices');
+    }
+  }
+
+  void performAction(int deviceId, String componentName, String action) async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+
+    final response = await http.post(
+      Uri.parse('${dotenv.env['API_URL']}/api/commands/add/'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Token $token',
+      },
+      body: jsonEncode({
+        'device': deviceId,
+        'data': {"name": componentName, "action": action}
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Action performed successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to perform action')),
+      );
+    }
+  }
+
+  Widget buildDeviceCard(Device device) {
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.devices, size: 24, color: Colors.blueAccent),
+                const SizedBox(width: 8),
+                Text(
+                  device.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            if (device.data != null &&
+                device.data!['components'] is List &&
+                (device.data!['components'] as List).isNotEmpty)
+              ...device.data!['components'].map((component) {
+                if (component['actions'] is List) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
+                      Text(
+                        component['name'],
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        children: (component['actions'] as List)
+                            .map<Widget>((action) {
+                          return ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                            ),
+                            onPressed: () {
+                              performAction(
+                                device.id,
+                                component['name'],
+                                action,
+                              );
+                            },
+                            child: Text(action.toString()),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder<List<Space>>(
-        future: _spacesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(child: Text('Failed to load data'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No spaces found'));
-          }
-
-          final spaces = snapshot.data!;
-          return ListView.builder(
-            itemCount: spaces.length,
-            padding: const EdgeInsets.all(16.0),  // Add padding around the list
-            itemBuilder: (context, index) {
-              final space = spaces[index];
-              return Card(
-                elevation: 4,  // Add a slight shadow effect
-                margin: const EdgeInsets.symmetric(vertical: 8.0),  // Add margin between cards
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),  // Rounded corners
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {
+            _spacesFuture = fetchSpaces();
+            _spacelessDevicesFuture = fetchSpacelessDevices();
+          });
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Spaces',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16.0),  // Add padding inside the ListTile
-                  leading: const Icon(Icons.home, size: 40, color: Colors.blueAccent),  // Add an icon
-                  title: Text(
-                    space.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  subtitle: Text(
-                    space.description ?? 'No description available',
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.blueAccent),  // Add a trailing icon
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SpaceDetailsPage(space: space),
-                      ),
+                const SizedBox(height: 16),
+                FutureBuilder<List<Space>>(
+                  future: _spacesFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return const Center(child: Text('Failed to load spaces'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No spaces found'));
+                    }
+
+                    return Column(
+                      children: snapshot.data!.map((space) {
+                        return Card(
+                          elevation: 4,
+                          margin: const EdgeInsets.symmetric(vertical: 8.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16.0),
+                            leading: const Icon(Icons.home,
+                                size: 40, color: Colors.blueAccent),
+                            title: Text(
+                              space.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            subtitle: Text(
+                              space.description ?? 'No description available',
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.grey),
+                            ),
+                            trailing: const Icon(Icons.arrow_forward_ios,
+                                color: Colors.blueAccent),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      SpaceDetailsPage(space: space),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      }).toList(),
                     );
                   },
                 ),
-              );
-            },
-          );
-        },
+                const SizedBox(height: 32),
+                const Text(
+                  'Unassigned Devices',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                FutureBuilder<List<Device>>(
+                  future: _spacelessDevicesFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return const Center(
+                          child: Text('Failed to load devices'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(
+                          child: Text('No unassigned devices found'));
+                    }
+
+                    return Column(
+                      children: snapshot.data!
+                          .map((device) => buildDeviceCard(device))
+                          .toList(),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
