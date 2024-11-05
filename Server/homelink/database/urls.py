@@ -17,6 +17,9 @@ urlpatterns = [
         "spaces/<int:space_id>/devices/",
         SpaceDevicesView.as_view({"get": "list", "post": "create"}),
     ),
+    path("spaces/<int:space_id>/users/", SpaceUsersView.as_view(), name="space_users"),
+    path("spaces/<int:space_id>/add_user/", AddUserToSpaceView.as_view(), name="add_user_to_space"),
+    path("spaces/<int:space_id>/remove_user/<int:user_id>/", RemoveUserFromSpaceView.as_view(), name="remove_user_from_space"),
     path("commands/add/", CommandViewSet.as_view({"post": "create"})),
     path("commands/get/", CommandViewSet.as_view({"get": "list"})),
 ]

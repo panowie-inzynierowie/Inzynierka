@@ -12,13 +12,15 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["username", "email", "pk"]
+        fields = ["id", "username", "email", "pk"]
 
 
 class SpaceSerializer(serializers.ModelSerializer):
+    users = UserSerializer(many=True, read_only=True)  # Add this line to include users
+
     class Meta:
         model = Space
-        fields = ["id", "name", "description"]
+        fields = ["id", "name", "description", "users"]
 
     def create(self, validated_data):
         user = self.context["request"].user

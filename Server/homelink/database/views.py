@@ -4,14 +4,14 @@ import threading
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.views import APIView  # Add this import
+from rest_framework.permissions import IsAuthenticated  # Add this import
 from django.db.models import Q
 
 from .models.models import *
 from .serializers import *
-
 
 User = get_user_model()
 
@@ -72,7 +72,7 @@ class CommandViewSet(viewsets.ModelViewSet):
             Q(device__owner=self.request.user.pk)
             | Q(device__account=self.request.user.pk),
             executed=False,
-        )
+            )
 
     def perform_create(self, serializer):
         serializer.save(
@@ -81,7 +81,7 @@ class CommandViewSet(viewsets.ModelViewSet):
                 if self.request.user.is_device
                 else self.request.user
             ),
-            device=(  # device is creating command -> it doesn't know its PK -> go through account to get Device reference
+            device=(
                 serializer.validated_data["device"]
                 if serializer.validated_data.get("device")
                 else self.request.user.account_devices.first()
@@ -135,3 +135,60 @@ class CommandsLinkViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         request.data["owner"] = request.user.pk
         return super().create(request, *args, **kwargs)
+
+
+# AddUserToSpaceView to add a user to a space
+class AddUserToSpaceView(APIView):  # APIView is now imported
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, space_id):
+        username = request.data.get("username")
+
+        if not username:
+            return Response({"error": "Username is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            space = Space.objects.get(pk=space_id)
+            space.users.add(user)
+            return Response({"message": f"User '{username}' added to space."}, status=status.HTTP_200_OK)
+        except Space.DoesNotExist:
+            return Response({"error": "Space not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# RemoveUserFromSpaceView to remove a user from a space
+class RemoveUserFromSpaceView(APIView):  # APIView is now imported
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, space_id, user_id):
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            space = Space.objects.get(pk=space_id)
+            if user not in space.users.all():
+                return Response({"error": "User not in this space"}, status=status.HTTP_400_BAD_REQUEST)
+
+            space.users.remove(user)
+            return Response({"message": f"User '{user.username}' removed from space."}, status=status.HTTP_204_NO_CONTENT)
+        except Space.DoesNotExist:
+            return Response({"error": "Space not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class SpaceUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, space_id):
+        try:
+            space = Space.objects.get(pk=space_id)
+        except Space.DoesNotExist:
+            return Response({"error": "Space not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        users = space.users.all()  # Retrieve all users associated with the space
+        serializer = UserSerializer(users, many=True)  # Serialize the list of users
+        return Response(serializer.data, status=status.HTTP_200_OK)

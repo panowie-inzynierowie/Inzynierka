@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
 import '../classes/device.dart';
 import '../classes/space.dart';
+import 'manage_space.dart';
 
 class SpaceDetailsPage extends StatefulWidget {
   final Space space;
@@ -38,12 +39,16 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as List;
-      print(data[0]);
+      print("Fetched devices data: $data");  // Debug print to check the API response
+      if (data.isEmpty) {
+        print("No devices found for this space.");
+      }
       return data.map((item) => Device.fromJson(item)).toList();
     } else {
       throw Exception('Failed to load devices');
     }
   }
+
 
   void performAction(int deviceId, String componentName, String action) async {
     final token = Provider.of<AppState>(context, listen: false).token;
@@ -74,7 +79,23 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.space.name)),
+        appBar: AppBar(
+          title: Text(widget.space.name),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.settings),
+              tooltip: 'Manage Space',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ManageSpacePage(spaceId: widget.space.id),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       body: FutureBuilder<List<Device>>(
         future: _devicesFuture,
         builder: (context, snapshot) {
@@ -83,6 +104,9 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (snapshot.hasData) {
+            if (snapshot.data!.isEmpty) {
+              return Center(child: Text('No devices found in this space'));
+            }
             return ListView.builder(
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
@@ -94,9 +118,7 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          device.name,
-                        ),
+                        Text(device.name),
                         SizedBox(height: 8),
                         if (device.data != null &&
                             device.data!['components'] is List &&
@@ -106,9 +128,7 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    component['name'],
-                                  ),
+                                  Text(component['name']),
                                   Wrap(
                                     spacing: 8.0,
                                     runSpacing: 4.0,
@@ -142,7 +162,7 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
             return Center(child: Text('No devices found'));
           }
         },
-      ),
+      )
     );
   }
 }
