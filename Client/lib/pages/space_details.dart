@@ -30,7 +30,8 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
     final token = Provider.of<AppState>(context, listen: false).token;
 
     final response = await http.get(
-      Uri.parse('${dotenv.env['API_URL']}/api/devices/get/'),
+      Uri.parse(
+          '${dotenv.env['API_URL']}/api/devices/get/?space=${widget.space.id}'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Token $token',
@@ -39,7 +40,8 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as List;
-      print("Fetched devices data: $data");  // Debug print to check the API response
+      print(
+          "Fetched devices data: $data"); // Debug print to check the API response
       if (data.isEmpty) {
         print("No devices found for this space.");
       }
@@ -48,7 +50,6 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
       throw Exception('Failed to load devices');
     }
   }
-
 
   void performAction(int deviceId, String componentName, String action) async {
     final token = Provider.of<AppState>(context, listen: false).token;
@@ -89,80 +90,80 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ManageSpacePage(spaceId: widget.space.id),
+                    builder: (context) =>
+                        ManageSpacePage(spaceId: widget.space.id),
                   ),
                 );
               },
             ),
           ],
         ),
-      body: FutureBuilder<List<Device>>(
-        future: _devicesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            if (snapshot.data!.isEmpty) {
-              return Center(child: Text('No devices found in this space'));
-            }
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                final device = snapshot.data![index];
-                return Card(
-                  margin: EdgeInsets.all(8.0),
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(device.name),
-                        SizedBox(height: 8),
-                        if (device.data != null &&
-                            device.data!['components'] is List &&
-                            (device.data!['components'] as List).isNotEmpty)
-                          ...device.data!['components'].map((component) {
-                            if (component['actions'] is List) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(component['name']),
-                                  Wrap(
-                                    spacing: 8.0,
-                                    runSpacing: 4.0,
-                                    children: (component['actions'] as List)
-                                        .map<Widget>((action) {
-                                      return ElevatedButton(
-                                        child: Text(action.toString()),
-                                        onPressed: () {
-                                          performAction(
-                                            device.id,
-                                            component['name'],
-                                            action,
-                                          );
-                                        },
-                                      );
-                                    }).toList(),
-                                  ),
-                                  SizedBox(height: 8),
-                                ],
-                              );
-                            }
-                            return SizedBox.shrink();
-                          }).toList(),
-                      ],
+        body: FutureBuilder<List<Device>>(
+          future: _devicesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (snapshot.hasData) {
+              if (snapshot.data!.isEmpty) {
+                return Center(child: Text('No devices found in this space'));
+              }
+              return ListView.builder(
+                itemCount: snapshot.data!.length,
+                itemBuilder: (context, index) {
+                  final device = snapshot.data![index];
+                  return Card(
+                    margin: EdgeInsets.all(8.0),
+                    child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(device.name),
+                          SizedBox(height: 8),
+                          if (device.data != null &&
+                              device.data!['components'] is List &&
+                              (device.data!['components'] as List).isNotEmpty)
+                            ...device.data!['components'].map((component) {
+                              if (component['actions'] is List) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(component['name']),
+                                    Wrap(
+                                      spacing: 8.0,
+                                      runSpacing: 4.0,
+                                      children: (component['actions'] as List)
+                                          .map<Widget>((action) {
+                                        return ElevatedButton(
+                                          child: Text(action.toString()),
+                                          onPressed: () {
+                                            performAction(
+                                              device.id,
+                                              component['name'],
+                                              action,
+                                            );
+                                          },
+                                        );
+                                      }).toList(),
+                                    ),
+                                    SizedBox(height: 8),
+                                  ],
+                                );
+                              }
+                              return SizedBox.shrink();
+                            }).toList(),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            );
-          } else {
-            return Center(child: Text('No devices found'));
-          }
-        },
-      )
-    );
+                  );
+                },
+              );
+            } else {
+              return Center(child: Text('No devices found'));
+            }
+          },
+        ));
   }
 }

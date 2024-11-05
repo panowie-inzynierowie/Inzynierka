@@ -6,12 +6,14 @@ from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.views import APIView  # Add this import
-from rest_framework.permissions import IsAuthenticated  # Add this import
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 
+from .filters import DeviceFilter
 from .models.models import *
 from .serializers import *
+from django_filters.rest_framework import DjangoFilterBackend
 
 User = get_user_model()
 
@@ -41,6 +43,8 @@ class SpaceDevicesView(viewsets.ModelViewSet):
 
 class DeviceViewSet(viewsets.ModelViewSet):
     serializer_class = DeviceSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = DeviceFilter
 
     def get_queryset(self):
         if self.request.query_params.get("spaceless", None):
@@ -74,7 +78,7 @@ class CommandViewSet(viewsets.ModelViewSet):
             Q(device__owner=self.request.user.pk)
             | Q(device__account=self.request.user.pk),
             executed=False,
-            )
+        )
 
     def perform_create(self, serializer):
         serializer.save(
@@ -150,19 +154,28 @@ class AddUserToSpaceView(APIView):  # APIView is now imported
         username = request.data.get("username")
 
         if not username:
-            return Response({"error": "Username is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Username is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         try:
             space = Space.objects.get(pk=space_id)
             space.users.add(user)
-            return Response({"message": f"User '{username}' added to space."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": f"User '{username}' added to space."},
+                status=status.HTTP_200_OK,
+            )
         except Space.DoesNotExist:
-            return Response({"error": "Space not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Space not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
 
 # RemoveUserFromSpaceView to remove a user from a space
@@ -173,17 +186,28 @@ class RemoveUserFromSpaceView(APIView):  # APIView is now imported
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         try:
             space = Space.objects.get(pk=space_id)
             if user not in space.users.all():
-                return Response({"error": "User not in this space"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "User not in this space"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             space.users.remove(user)
-            return Response({"message": f"User '{user.username}' removed from space."}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"message": f"User '{user.username}' removed from space."},
+                status=status.HTTP_204_NO_CONTENT,
+            )
         except Space.DoesNotExist:
-            return Response({"error": "Space not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Space not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
 
 class SpaceUsersView(APIView):
     permission_classes = [IsAuthenticated]
@@ -192,7 +216,9 @@ class SpaceUsersView(APIView):
         try:
             space = Space.objects.get(pk=space_id)
         except Space.DoesNotExist:
-            return Response({"error": "Space not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Space not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         users = space.users.all()  # Retrieve all users associated with the space
         serializer = UserSerializer(users, many=True)  # Serialize the list of users
