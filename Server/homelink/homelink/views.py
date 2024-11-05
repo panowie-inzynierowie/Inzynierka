@@ -8,6 +8,10 @@ from django.contrib.auth import get_user_model
 from .serializers import UserSerializer
 from .llm import get_structured_response
 
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 
 class CreateUserView(CreateAPIView):
     model = get_user_model()
@@ -34,16 +38,21 @@ class CreateUserView(CreateAPIView):
             headers=headers,
         )
 
+
 class ChatGPTView(APIView):
     def post(self, request):
-        prompt = request.data.get('prompt', None)
+        prompt = request.data.get("prompt", None)
         if not prompt:
-            return Response({"error": "Prompt is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Prompt is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
-            # Call the function from LLM.py
-            response = get_structured_response(prompt)
+            response = get_structured_response(
+                prompt, devices=request.user.get_user_devices(), user=request.user
+            )
             return Response({"response": response}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
