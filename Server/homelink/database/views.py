@@ -43,6 +43,8 @@ class DeviceViewSet(viewsets.ModelViewSet):
     serializer_class = DeviceSerializer
 
     def get_queryset(self):
+        if self.request.query_params.get("spaceless", None):
+            return Device.objects.filter(owner=self.request.user).filter(space=None)
         return Device.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
