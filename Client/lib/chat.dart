@@ -55,8 +55,9 @@ class ChatDialogState extends State<ChatDialog> {
     fieldText.value = TextEditingValue(text: result.recognizedWords);
   }
 
-  // Send message to Django backend and get response from ChatGPT
   Future<void> _sendMessage(String message) async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+
     final url = Uri.parse('${dotenv.env['API_URL']}/api/chat/');
 
     setState(() {
@@ -66,17 +67,19 @@ class ChatDialogState extends State<ChatDialog> {
     try {
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"prompt": message}),  // Send the prompt to the backend
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': 'Token $token',
+        },
+        body: jsonEncode({"prompt": message}),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final chatResponse = data['response'];  // This will be a string
+        final chatResponse = data['response'];
 
-        // Add the system (LLM) response to the chat
         setState(() {
-          messages.add(ChatMessage(author: Author.llm, content: chatResponse));  // Display the LLM response
+          messages.add(ChatMessage(author: Author.llm, content: chatResponse));
         });
       } else {
         throw Exception('Failed to load response');
@@ -104,7 +107,7 @@ class ChatDialogState extends State<ChatDialog> {
 
                 return Align(
                   alignment:
-                  isUser ? Alignment.centerRight : Alignment.centerLeft,
+                      isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     padding: const EdgeInsets.symmetric(
@@ -170,7 +173,7 @@ class ChatDialogState extends State<ChatDialog> {
                     ),
                   ),
                   onFieldSubmitted: (value) {
-                    _sendMessage(value);  // Send message to backend
+                    _sendMessage(value);
                     fieldText.clear();
                   },
                 ),
