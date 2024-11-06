@@ -4,7 +4,6 @@ from rest_framework import serializers
 
 from .models.models import *
 
-
 User = get_user_model()
 
 
@@ -28,9 +27,17 @@ class SpaceSerializer(serializers.ModelSerializer):
         return space
 
 
+class DeviceUpdateSpaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Device
+        fields = ["space"]
+
+
 class DeviceSerializer(serializers.ModelSerializer):
     space = SpaceSerializer(read_only=True)
-    space_id = serializers.IntegerField(write_only=True, required=False)
+    space_id = serializers.IntegerField(
+        write_only=True, required=False, allow_null=True
+    )
     owner = serializers.ReadOnlyField(source="owner.username")
 
     class Meta:

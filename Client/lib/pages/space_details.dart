@@ -26,6 +26,34 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
     _devicesFuture = fetchDevices();
   }
 
+  Future<void> detachDevice(int deviceId) async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+
+    final response = await http.put(
+      Uri.parse('${dotenv.env['API_URL']}/api/devices/$deviceId/'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Token $token',
+      },
+      body: jsonEncode({
+        'space': null,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Device detached successfully')),
+      );
+      setState(() {
+        _devicesFuture = fetchDevices();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to detach device')),
+      );
+    }
+  }
+
   Future<List<Device>> fetchDevices() async {
     final token = Provider.of<AppState>(context, listen: false).token;
 
@@ -40,8 +68,7 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as List;
-      print(
-          "Fetched devices data: $data"); // Debug print to check the API response
+      print("Fetched devices data: $data");
       if (data.isEmpty) {
         print("No devices found for this space.");
       }
@@ -114,14 +141,26 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
                 itemBuilder: (context, index) {
                   final device = snapshot.data![index];
                   return Card(
-                    margin: EdgeInsets.all(8.0),
+                    margin: const EdgeInsets.all(8.0),
                     child: Padding(
-                      padding: EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(8.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(device.name),
-                          SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(device.name),
+                              ElevatedButton(
+                                onPressed: () => detachDevice(device.id),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                                child: const Text('Detach'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
                           if (device.data != null &&
                               device.data!['components'] is List &&
                               (device.data!['components'] as List).isNotEmpty)

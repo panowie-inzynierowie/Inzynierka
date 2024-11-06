@@ -5,6 +5,7 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 
 router.register("commands", CommandViewSet, basename="routed-commands")
+router.register("devices", DeviceViewSet, basename="routed-devices")
 router.register("commands-links", CommandsLinkViewSet, basename="commands-links")
 
 urlpatterns = [

@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
+from .mixins import MultiSerializerMixin
 
 from .filters import DeviceFilter
 from .models.models import *
@@ -41,15 +42,20 @@ class SpaceDevicesView(viewsets.ModelViewSet):
             )
 
 
-class DeviceViewSet(viewsets.ModelViewSet):
-    serializer_class = DeviceSerializer
+class DeviceViewSet(viewsets.ModelViewSet, MultiSerializerMixin):
+    default_serializer_class = DeviceSerializer
+    serializer_classes = {
+        "update": DeviceUpdateSpaceSerializer,
+    }
     filter_backends = [DjangoFilterBackend]
     filterset_class = DeviceFilter
 
     def get_queryset(self):
         if self.request.query_params.get("spaceless", None):
             return Device.objects.filter(owner=self.request.user).filter(space=None)
-        return Device.objects.filter(owner=self.request.user)
+        return Device.objects.filter(
+            Q(owner=self.request.user) | Q(space__users=self.request.user)
+        ).distinct()
 
     def perform_create(self, serializer):
         try:

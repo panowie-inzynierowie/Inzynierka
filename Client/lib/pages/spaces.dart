@@ -18,6 +18,7 @@ class SpacesPage extends StatefulWidget {
 class SpacesPageState extends State<SpacesPage> {
   late Future<List<Space>> _spacesFuture;
   late Future<List<Device>> _spacelessDevicesFuture;
+  int? _selectedDeviceId;
 
   @override
   void initState() {
@@ -65,6 +66,36 @@ class SpacesPageState extends State<SpacesPage> {
     }
   }
 
+  Future<void> assignDeviceToSpace(int deviceId, int spaceId) async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+
+    final response = await http.put(
+      Uri.parse('${dotenv.env['API_URL']}/api/devices/$deviceId/'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Token $token',
+      },
+      body: jsonEncode({
+        'space': spaceId,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Device assigned successfully')),
+      );
+      setState(() {
+        _selectedDeviceId = null;
+        _spacesFuture = fetchSpaces();
+        _spacelessDevicesFuture = fetchSpacelessDevices();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to assign device')),
+      );
+    }
+  }
+
   void performAction(int deviceId, String componentName, String action) async {
     final token = Provider.of<AppState>(context, listen: false).token;
 
@@ -104,15 +135,36 @@ class SpacesPageState extends State<SpacesPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.devices, size: 24, color: Colors.blueAccent),
-                const SizedBox(width: 8),
-                Text(
-                  device.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                Row(
+                  children: [
+                    const Icon(Icons.devices,
+                        size: 24, color: Colors.blueAccent),
+                    const SizedBox(width: 8),
+                    Text(
+                      device.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedDeviceId =
+                          _selectedDeviceId == device.id ? null : device.id;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _selectedDeviceId == device.id
+                        ? Colors.red
+                        : Colors.blue,
                   ),
+                  child: Text(
+                      _selectedDeviceId == device.id ? 'Cancel' : 'Assign'),
                 ),
               ],
             ),
@@ -165,12 +217,56 @@ class SpacesPageState extends State<SpacesPage> {
     );
   }
 
+  Widget buildSpaceCard(Space space) {
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16.0),
+        leading: const Icon(Icons.home, size: 40, color: Colors.blueAccent),
+        title: Text(
+          space.name,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        subtitle: Text(
+          space.description ?? 'No description available',
+          style: const TextStyle(fontSize: 14, color: Colors.grey),
+        ),
+        trailing: _selectedDeviceId != null
+            ? ElevatedButton(
+                onPressed: () =>
+                    assignDeviceToSpace(_selectedDeviceId!, space.id),
+                child: const Text('Add'),
+              )
+            : const Icon(Icons.arrow_forward_ios, color: Colors.blueAccent),
+        onTap: _selectedDeviceId == null
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SpaceDetailsPage(space: space),
+                  ),
+                );
+              }
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
           setState(() {
+            _selectedDeviceId = null;
             _spacesFuture = fetchSpaces();
             _spacelessDevicesFuture = fetchSpacelessDevices();
           });
@@ -203,44 +299,9 @@ class SpacesPageState extends State<SpacesPage> {
                     }
 
                     return Column(
-                      children: snapshot.data!.map((space) {
-                        return Card(
-                          elevation: 4,
-                          margin: const EdgeInsets.symmetric(vertical: 8.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16.0),
-                            leading: const Icon(Icons.home,
-                                size: 40, color: Colors.blueAccent),
-                            title: Text(
-                              space.name,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            subtitle: Text(
-                              space.description ?? 'No description available',
-                              style: const TextStyle(
-                                  fontSize: 14, color: Colors.grey),
-                            ),
-                            trailing: const Icon(Icons.arrow_forward_ios,
-                                color: Colors.blueAccent),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      SpaceDetailsPage(space: space),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      }).toList(),
+                      children: snapshot.data!
+                          .map((space) => buildSpaceCard(space))
+                          .toList(),
                     );
                   },
                 ),
