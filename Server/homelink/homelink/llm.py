@@ -66,3 +66,68 @@ def get_structured_response(
         )
 
     return text_response
+
+
+class Trigger(BaseModel):
+    device_id: int
+    component_name: str
+    action: str
+
+
+class ResultData(BaseModel):
+    name: str
+    action: str
+
+
+class Result(BaseModel):
+    device_id: int
+    data: ResultData
+
+
+class CommandsLink(BaseModel):
+    triggers: List[Trigger]
+    results: List[Result]
+    ttl: int
+
+
+class LinkResponse(BaseModel):
+    links: List[CommandsLink]
+
+    def to_dict(self):
+        return {
+            "links": [
+                {
+                    "triggers": [t.model_dump() for t in link.triggers],
+                    "results": [
+                        {"device_id": r.device_id, "data": r.data.model_dump()}
+                        for r in link.results
+                    ],
+                    "ttl": link.ttl,
+                }
+                for link in self.links
+            ]
+        }
+
+
+def generate_suggested_links_for_user(user):
+    devices = user.get_user_devices()
+    response = client.beta.chat.completions.parse(
+        model=MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a chatbot helping user with custom smart home system. "
+                "Here are the devices user can access: "
+                + json.dumps(DeviceSerializer(devices, many=True).data),
+            },
+            {
+                "role": "user",
+                "content": "Suggest me some links that make sense for smart home system, "
+                "links are automations that can make home smarter by chaining performed actions if certain conditions are met. "
+                "set ttl if there is more than one trigger "
+                "(ttl defines time  between first and last trigger to execute the linked commands)",
+            },
+        ],
+        response_format=LinkResponse,
+    )
+    return response.choices[0].message.parsed.to_dict()

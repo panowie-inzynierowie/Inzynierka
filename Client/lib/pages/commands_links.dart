@@ -20,7 +20,7 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
   List<Map<String, dynamic>> _results = [];
   String? _ttl;
   CommandsLink? _editingLink;
-
+  List<Map<String, dynamic>> _suggestedLinks = [];
   @override
   void initState() {
     super.initState();
@@ -185,16 +185,152 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
     });
   }
 
+  Future<void> _fetchSuggestedLinks() async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+    final response = await http.get(
+      Uri.parse('${dotenv.env['API_URL']}/api/generate-links/'),
+      headers: {'Authorization': 'Token $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        _suggestedLinks = List<Map<String, dynamic>>.from(data['links']);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load suggested links')),
+      );
+    }
+  }
+
+  Future<void> _addSuggestedLink(Map<String, dynamic> link) async {
+    final token = Provider.of<AppState>(context, listen: false).token;
+    final response = await http.post(
+      Uri.parse('${dotenv.env['API_URL']}/api/commands-links/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(link),
+    );
+
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Link added successfully')),
+      );
+      setState(() {
+        _suggestedLinks.remove(link);
+      });
+      _fetchLinks();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to add link')),
+      );
+    }
+  }
+
+  Widget _buildSuggestedLinksSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Suggested Links',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton(
+                  onPressed: _fetchSuggestedLinks,
+                  child: const Text('Generate'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_suggestedLinks.isEmpty)
+              const Text(
+                  'No suggested links available. Click Generate to get suggestions.')
+            else
+              ..._suggestedLinks
+                  .map((link) => Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Triggers:',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              ...link['triggers']
+                                  .map<Widget>((trigger) => Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 16.0, top: 4.0),
+                                        child: Text(
+                                            '${trigger['component_name']} (${trigger['action']}) on Device ${trigger['device_id']}'),
+                                      )),
+                              const SizedBox(height: 8),
+                              const Text('Results:',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              ...link['results']
+                                  .map<Widget>((result) => Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 16.0, top: 4.0),
+                                        child: Text(
+                                            '${result['data']['name']} (${result['data']['action']}) on Device ${result['device_id']}'),
+                                      )),
+                              if (link['ttl'] != 0)
+                                Text('TTL: ${link['ttl']} seconds'),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _suggestedLinks.remove(link);
+                                      });
+                                    },
+                                    child: const Text('Delete'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ElevatedButton(
+                                    onPressed: () => _addSuggestedLink(link),
+                                    child: const Text('Add'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ))
+                  .toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Manage Links')),
+      appBar: AppBar(title: const Text('Manage Links')),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            ..._links.map((link) => _buildLinkCard(link)),
-            _buildCreateLinkForm(),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              _buildSuggestedLinksSection(),
+              const SizedBox(height: 24),
+              ..._links.map((link) => _buildLinkCard(link)),
+              _buildCreateLinkForm(),
+            ],
+          ),
         ),
       ),
     );

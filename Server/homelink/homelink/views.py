@@ -6,7 +6,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
 
 from .serializers import UserSerializer
-from .llm import get_structured_response
+from .llm import get_structured_response, generate_suggested_links_for_user
 
 from django.contrib.auth import get_user_model
 
@@ -56,3 +56,8 @@ class ChatGPTView(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class GenerateLinksView(APIView):
+    def get(self, request):
+        return Response(generate_suggested_links_for_user(request.user))
