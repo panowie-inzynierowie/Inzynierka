@@ -51,7 +51,7 @@ class ChatGPTView(APIView):
             response = get_structured_response(
                 prompt, devices=request.user.get_user_devices(), user=request.user
             )
-            return Response({"response": response}, status=status.HTTP_200_OK)
+            return Response({"response": response}, status=status.HTTP_200_OK, content_type="application/json; charset=utf-8")
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR

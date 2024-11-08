@@ -37,7 +37,7 @@ class ModelResponse(BaseModel):
 
 
 def get_structured_response(
-    prompt, response_format=ModelResponse, devices=None, user=None
+        prompt, response_format=ModelResponse, devices=None, user=None
 ):
     d = DeviceSerializer(devices, many=True).data
     response = client.beta.chat.completions.parse(
@@ -46,8 +46,8 @@ def get_structured_response(
             {
                 "role": "system",
                 "content": "You are a chatbot helping user with custom smart home system. "
-                "Actions to perform on user's request put in commands_to_execute field."
-                "Here are the devices user can access: " + json.dumps(d),
+                           "Actions to perform on user's request put in commands_to_execute field."
+                           "Here are the devices user can access: " + json.dumps(d),
             },
             {"role": "user", "content": prompt},
         ],
@@ -56,6 +56,7 @@ def get_structured_response(
     response: ModelResponse = response.choices[0].message.parsed
     text_response = response.text
 
+    # Create the command objects in the database if there are commands to execute
     for command in response.commands_to_execute:
         device = Device.objects.get(id=command.device_id)
         Command.objects.create(
@@ -65,7 +66,10 @@ def get_structured_response(
             data=command.data.model_dump(),
         )
 
+    # Return a structured JSON response
+    print(text_response)
     return text_response
+
 
 
 class Trigger(BaseModel):
