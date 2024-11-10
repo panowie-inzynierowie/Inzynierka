@@ -8,23 +8,25 @@ import utime
 import uos as os
 import urandom as random
 import ubinascii
+import gc
 
 led = machine.Pin("LED", machine.Pin.OUT)
 led.off()
 last_time = 0
+registered = False
 
 
 def movement_detector_handler(_):
+    print("_ruch")
     global last_time
     new = utime.ticks_ms()
-    if (new - last_time) > 1000:
+    if (new - last_time) > 60000:
+        print("ruch")
         last_time = new
         create_command({"name": "Movement detector", "action": "detected"})
 
 
-# TODO actual movement detector
-button = machine.Pin(14, machine.Pin.IN, machine.Pin.PULL_DOWN)
-button.irq(trigger=machine.Pin.IRQ_FALLING, handler=movement_detector_handler)
+pir = machine.Pin(16, machine.Pin.IN)
 
 SSID = None
 WIFI_PASSWORD = None
@@ -79,6 +81,7 @@ def connect_to_wifi():
             ["{:02x}".format(b) for b in network.WLAN(network.STA_IF).config("mac")]
         )
     )
+    sleep(2)
 
 
 def register_pico():
@@ -90,7 +93,7 @@ def register_pico():
 
     response = None
     device_name = USERNAME + random_characters()
-    print({"username": device_name, "password": PASSWORD, "user": USERNAME})
+    print({"username": device_name, "password": PASSWORD, "user": USERNAME}, SERVER_URL)
 
     try:
         response = requests.post(
@@ -152,21 +155,26 @@ def get_commands():
     """
     while True:
         try:
+            gc.collect()
             request = requests.get(SERVER_URL + f"/api/commands/get/", headers=HEADERS)
             if request.status_code == 200:
                 data = request.json()
+                request.close()
                 for command in data:
                     perform_actions(command["data"])
-                    requests.delete(
+                    del_req = requests.delete(
                         f"{SERVER_URL}/api/commands/{command['id']}/", headers=HEADERS
                     )
+                    del_req.close()
                     sleep(1)
             else:
                 print("Failed to get commands. Status code:", request.status_code)
+                request.close()
             sleep(1)
         except Exception as e:
             print("Exception", e)
             sleep(5)
+            gc.collect()
 
 
 def define_devices():
@@ -281,6 +289,10 @@ def main():
         register_pico()
         define_devices()
 
+    pir.irq(trigger=machine.Pin.IRQ_RISING, handler=movement_detector_handler)
+    led.on()
+    sleep(2)
+    led.off()
     get_commands()
 
 
