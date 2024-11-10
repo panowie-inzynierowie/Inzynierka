@@ -19,11 +19,18 @@ class SpaceDetailsPage extends StatefulWidget {
 
 class SpaceDetailsPageState extends State<SpaceDetailsPage> {
   late Future<List<Device>> _devicesFuture;
+  final Map<String, TextEditingController> _customActionControllers = {};
 
   @override
   void initState() {
     super.initState();
     _devicesFuture = fetchDevices();
+  }
+
+  @override
+  void dispose() {
+    _customActionControllers.forEach((_, controller) => controller.dispose());
+    super.dispose();
   }
 
   Future<void> detachDevice(int deviceId) async {
@@ -104,6 +111,69 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
     }
   }
 
+  String _getControllerKey(int deviceId, String componentName) {
+    return '$deviceId-$componentName';
+  }
+
+  Widget _buildComponentActions(Device device, Map<String, dynamic> component) {
+    final controllerKey = _getControllerKey(device.id, component['name']);
+    _customActionControllers.putIfAbsent(
+        controllerKey, () => TextEditingController());
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(component['name']),
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 4.0,
+          children: (component['actions'] as List).map<Widget>((action) {
+            return ElevatedButton(
+              child: Text(action.toString()),
+              onPressed: () {
+                performAction(
+                  device.id,
+                  component['name'],
+                  action,
+                );
+              },
+            );
+          }).toList(),
+        ),
+        if (component['has_input_action'] == true) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _customActionControllers[controllerKey],
+                  decoration: const InputDecoration(
+                    hintText: 'Custom action',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  final customAction =
+                      _customActionControllers[controllerKey]?.text;
+                  if (customAction?.isNotEmpty == true) {
+                    performAction(device.id, component['name'], customAction!);
+                    _customActionControllers[controllerKey]?.clear();
+                  }
+                },
+                child: const Text('Send'),
+              ),
+            ],
+          ),
+        ],
+        SizedBox(height: 8),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,30 +236,8 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
                               (device.data!['components'] as List).isNotEmpty)
                             ...device.data!['components'].map((component) {
                               if (component['actions'] is List) {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(component['name']),
-                                    Wrap(
-                                      spacing: 8.0,
-                                      runSpacing: 4.0,
-                                      children: (component['actions'] as List)
-                                          .map<Widget>((action) {
-                                        return ElevatedButton(
-                                          child: Text(action.toString()),
-                                          onPressed: () {
-                                            performAction(
-                                              device.id,
-                                              component['name'],
-                                              action,
-                                            );
-                                          },
-                                        );
-                                      }).toList(),
-                                    ),
-                                    SizedBox(height: 8),
-                                  ],
-                                );
+                                return _buildComponentActions(
+                                    device, component);
                               }
                               return SizedBox.shrink();
                             }).toList(),

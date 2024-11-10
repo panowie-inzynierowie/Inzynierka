@@ -123,6 +123,11 @@ class SpacesPageState extends State<SpacesPage> {
   }
 
   Widget buildDeviceCard(Device device) {
+    final Map<String, TextEditingController> _customActionControllers = {};
+    String _getControllerKey(int deviceId, String componentName) {
+      return '$deviceId-$componentName';
+    }
+
     return Card(
       elevation: 4,
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -173,6 +178,11 @@ class SpacesPageState extends State<SpacesPage> {
                 (device.data!['components'] as List).isNotEmpty)
               ...device.data!['components'].map((component) {
                 if (component['actions'] is List) {
+                  final controllerKey =
+                      _getControllerKey(device.id, component['name']);
+                  _customActionControllers.putIfAbsent(
+                      controllerKey, () => TextEditingController());
+
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -206,6 +216,39 @@ class SpacesPageState extends State<SpacesPage> {
                           );
                         }).toList(),
                       ),
+                      if (component['has_input_action'] == true) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller:
+                                    _customActionControllers[controllerKey],
+                                decoration: const InputDecoration(
+                                  hintText: 'Custom action',
+                                  isDense: true,
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                final customAction =
+                                    _customActionControllers[controllerKey]
+                                        ?.text;
+                                if (customAction?.isNotEmpty == true) {
+                                  performAction(device.id, component['name'],
+                                      customAction!);
+                                  _customActionControllers[controllerKey]
+                                      ?.clear();
+                                }
+                              },
+                              child: const Text('Send'),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   );
                 }

@@ -121,8 +121,16 @@ DATA_PAYLOAD = {
     "name": "Pico1",
     "data": {
         "components": [
-            {"name": "LED", "actions": ["on", "off", "toggle"]},
-            {"name": "Movement detector", "actions": ["detected"]},
+            {
+                "name": "LED",
+                "actions": ["on", "off", "toggle"],
+                "has_input_action": True,
+            },
+            {
+                "name": "Movement detector",
+                "actions": ["detected"],
+                "has_input_action": True,
+            },
         ]
     },
 }
