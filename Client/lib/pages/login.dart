@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
 import 'package:inzynierka_client/pages/home.dart';
@@ -34,18 +35,19 @@ class _LoginPageState extends State<LoginPage> {
   void _loadCredentials() async {
     final String username = await storage.read(key: "username") ?? '';
     final String password = await storage.read(key: "password") ?? '';
-    setState(() {
-      this.username = username;
-      this.password = password;
-    });
     if (username.isNotEmpty && password.isNotEmpty) {
+      setState(() {
+        this.username = username;
+        this.password = password;
+      });
       _login();
     }
   }
 
   void switchForm() {
     setState(() {
-      currentForm = currentForm == FormType.login ? FormType.register : FormType.login;
+      currentForm =
+          currentForm == FormType.login ? FormType.register : FormType.login;
     });
   }
 
@@ -53,25 +55,35 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       isLoading = true;
     });
-    final response = await http.post(
-      Uri.parse('${dotenv.env['API_URL']}/login/'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'username': username,
-        'password': password,
-      }),
-    );
-    setState(() {
-      isLoading = false;
-    });
+    Response response;
+    try {
+      response = await http.post(
+        Uri.parse('${dotenv.env['API_URL']}/login/'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'username': username,
+          'password': password,
+        }),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Failed to log in')));
+    }
+    ;
     if (response.statusCode == 200) {
       await storage.write(key: "username", value: username);
       await storage.write(key: "password", value: password);
       if (!mounted) return;
       context.read<AppState>().setUsername(username);
-      context.read<AppState>().setToken(json.decoder.convert(response.body)['token']);
+      context
+          .read<AppState>()
+          .setToken(json.decoder.convert(response.body)['token']);
 
       Navigator.pushReplacementNamed(context, '/home');
     } else {
@@ -110,7 +122,9 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
     if (response.statusCode == 201) {
       context.read<AppState>().setUsername(username);
-      context.read<AppState>().setToken(json.decoder.convert(response.body)['token']);
+      context
+          .read<AppState>()
+          .setToken(json.decoder.convert(response.body)['token']);
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context)
@@ -130,7 +144,7 @@ class _LoginPageState extends State<LoginPage> {
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Colors.lightBlue, Colors.blueAccent], // Blue gradient
+              colors: [Colors.lightBlue, Colors.blueAccent],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -151,17 +165,17 @@ class _LoginPageState extends State<LoginPage> {
                   duration: const Duration(milliseconds: 300),
                   child: currentForm == FormType.login
                       ? const Text('Log in to your account',
-                      key: ValueKey('login'),
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white))
+                          key: ValueKey('login'),
+                          style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white))
                       : const Text('Create a new account',
-                      key: ValueKey('register'),
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
+                          key: ValueKey('register'),
+                          style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
@@ -175,7 +189,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.0),
-                      borderSide: const BorderSide(color: Colors.lightBlueAccent),
+                      borderSide:
+                          const BorderSide(color: Colors.lightBlueAccent),
                     ),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.2),
@@ -200,7 +215,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.0),
-                      borderSide: const BorderSide(color: Colors.lightBlueAccent),
+                      borderSide:
+                          const BorderSide(color: Colors.lightBlueAccent),
                     ),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.2),
@@ -227,7 +243,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20.0),
-                        borderSide: const BorderSide(color: Colors.lightBlueAccent),
+                        borderSide:
+                            const BorderSide(color: Colors.lightBlueAccent),
                       ),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.2),
@@ -245,12 +262,13 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent, // Updated to blue
+                    backgroundColor: Colors.blueAccent,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 50, vertical: 15),
                   ),
                   onPressed: () {
                     if (currentForm == FormType.login) {
