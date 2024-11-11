@@ -284,7 +284,7 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
                                         child: Text(
                                             '${result['data']['name']} (${result['data']['action']}) on Device ${result['device_id']}'),
                                       )),
-                              if (link['ttl'] != 0)
+                              if (link['ttl'] != 0 && link['ttl'] != null)
                                 Text('TTL: ${link['ttl']} seconds'),
                               const SizedBox(height: 8),
                               Row(

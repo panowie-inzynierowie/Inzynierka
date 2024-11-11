@@ -4,7 +4,7 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 from database.serializers import DeviceSerializer
@@ -75,6 +75,7 @@ class Trigger(BaseModel):
     device_id: int
     component_name: str
     action: str
+    satisfied_at: Optional[str]
 
 
 class ResultData(BaseModel):
@@ -105,7 +106,7 @@ class LinkResponse(BaseModel):
                         {"device_id": r.device_id, "data": r.data.model_dump()}
                         for r in link.results
                     ],
-                    "ttl": link.ttl,
+                    "ttl": link.ttl if link.ttl else None,
                 }
                 for link in self.links
             ]
@@ -122,14 +123,15 @@ def generate_suggested_links_for_user(user):
                 "content": "You are a chatbot helping user with custom smart home system. "
                 "Here are the devices user can access: "
                 + json.dumps(DeviceSerializer(devices, many=True).data)
-                + "If device has has_input_action flag set to True, you can provide any string input value in the action field",
+                + "If device has has_input_action flag set to True, you can provide any string input value in the action field "
+                "Keep satisfied_at as None",
             },
             {
                 "role": "user",
                 "content": "Suggest me some links that make sense for smart home system, "
                 "links are automations that can make home smarter by chaining performed actions if certain conditions are met. "
                 "set ttl if there is more than one trigger "
-                "(ttl defines time  between first and last trigger to execute the linked commands)",
+                "(ttl (saved as number of seconds) defines time between first and last trigger to execute the linked commands)",
             },
         ],
         response_format=LinkResponse,
