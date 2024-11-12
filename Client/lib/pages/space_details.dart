@@ -127,7 +127,10 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
         Wrap(
           spacing: 8.0,
           runSpacing: 4.0,
-          children: (component['actions'] as List).map<Widget>((action) {
+          children: (component['is_output'] == false
+                  ? component['actions'] as List
+                  : [])
+              .map<Widget>((action) {
             return ElevatedButton(
               child: Text(action.toString()),
               onPressed: () {
@@ -224,7 +227,10 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
                               ElevatedButton(
                                 onPressed: () => detachDevice(device.id),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: Colors.red,
+                                  side: BorderSide(color: Colors.red),
+                                  elevation: 0,
                                 ),
                                 child: const Text('Detach'),
                               ),

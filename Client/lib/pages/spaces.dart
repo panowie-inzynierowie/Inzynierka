@@ -198,7 +198,9 @@ class SpacesPageState extends State<SpacesPage> {
                       Wrap(
                         spacing: 8.0,
                         runSpacing: 4.0,
-                        children: (component['actions'] as List)
+                        children: (component['is_output'] == false
+                                ? component['actions'] as List
+                                : [])
                             .map<Widget>((action) {
                           return ElevatedButton(
                             style: ElevatedButton.styleFrom(

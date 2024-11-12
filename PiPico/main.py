@@ -125,11 +125,13 @@ DATA_PAYLOAD = {
                 "name": "LED",
                 "actions": ["on", "off", "toggle"],
                 "has_input_action": True,
+                "is_output": False,
             },
             {
                 "name": "Movement detector",
                 "actions": ["detected"],
                 "has_input_action": True,
+                "is_output": True,
             },
         ]
     },

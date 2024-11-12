@@ -24,7 +24,7 @@ class Device(models.Model):
     # {
     # "components":
     # [{
-    # "name": "LED", "actions": ["on", "off", "toggle"], "has_input_action": True
+    # "name": "LED", "actions": ["on", "off", "toggle"], "has_input_action": True, is_output: False
     # }]
     # }
     data = models.JSONField(null=True, blank=True)
