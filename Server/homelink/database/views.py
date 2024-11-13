@@ -79,7 +79,18 @@ class SpaceViewSet(viewsets.ModelViewSet):
 class CommandViewSet(viewsets.ModelViewSet):
     serializer_class = CommandSerializer
 
+    def get_serializer(self, *args, **kwargs):
+        if self.request.query_params.get("all", None):
+            return CommandSerializer(*args, **kwargs)
+        else:
+            return CommandForDeviceSerializer(*args, **kwargs)
+
     def get_queryset(self):
+        if self.request.query_params.get("all", None):
+            return Command.objects.filter(
+                Q(device__owner=self.request.user.pk)
+                | Q(device__account=self.request.user.pk)
+            )
         return Command.objects.filter(
             Q(device__owner=self.request.user.pk)
             | Q(device__account=self.request.user.pk),

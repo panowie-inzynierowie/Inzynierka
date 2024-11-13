@@ -60,6 +60,12 @@ class CommandSerializer(serializers.ModelSerializer):
         fields = ["id", "description", "scheduled_at", "device", "data", "self_execute"]
 
 
+class CommandForDeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Command
+        fields = ["id", "data"]
+
+
 class CommandsLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = CommandsLink
