@@ -100,7 +100,7 @@ class SpacesPageState extends State<SpacesPage> {
     final token = Provider.of<AppState>(context, listen: false).token;
 
     final response = await http.post(
-      Uri.parse('${dotenv.env['API_URL']}/api/commands/add/'),
+      Uri.parse('${dotenv.env['API_URL']}/api/commands/add/?all=True'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Token $token',

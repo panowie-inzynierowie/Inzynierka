@@ -86,16 +86,14 @@ class CommandViewSet(viewsets.ModelViewSet):
             return CommandForDeviceSerializer(*args, **kwargs)
 
     def get_queryset(self):
-        if self.request.query_params.get("all", None):
-            return Command.objects.filter(
-                Q(device__owner=self.request.user.pk)
-                | Q(device__account=self.request.user.pk)
-            )
-        return Command.objects.filter(
+        qs = Command.objects.filter(
             Q(device__owner=self.request.user.pk)
-            | Q(device__account=self.request.user.pk),
-            executed=False,
+            | Q(device__account=self.request.user.pk)
         )
+
+        if self.request.query_params.get("all", None):
+            return qs
+        return qs.filter(executed=False)
 
     def perform_create(self, serializer):
         serializer.save(

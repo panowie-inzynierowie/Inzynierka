@@ -32,6 +32,7 @@ class CommandAdmin(admin.ModelAdmin):
     search_fields = ["description", "author__username"]
     autocomplete_fields = ["author", "device"]
     list_filter = ["author", "scheduled_at"]
+    list_editable = ["executed"]
 
 
 @admin.register(CommandsLink)

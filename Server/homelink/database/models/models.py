@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from datetime import datetime
 
 User = get_user_model()
 
@@ -91,11 +92,14 @@ class CommandsLink(models.Model):
         if all_satisfied:
             if self.ttl:
                 first_satisfied = min(
-                    trigger["satisfied_at"] for trigger in self.triggers
+                    datetime.fromisoformat(trigger["satisfied_at"])
+                    for trigger in self.triggers
                 )
                 last_satisfied = max(
-                    trigger["satisfied_at"] for trigger in self.triggers
+                    datetime.fromisoformat(trigger["satisfied_at"])
+                    for trigger in self.triggers
                 )
+
                 time_diff = last_satisfied - first_satisfied
 
                 if time_diff <= self.ttl:
@@ -135,6 +139,7 @@ class CommandsLink(models.Model):
                 if (
                     t["component_name"] == data["name"]
                     and t["action"] == data["action"]
+                    and t["device_id"] == device_id
                     and not t["satisfied_at"]
                 ):
                     t["satisfied_at"] = f"{timezone.now()}"
