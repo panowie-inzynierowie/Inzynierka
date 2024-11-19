@@ -10,6 +10,8 @@ import '../classes/device.dart';
 import '../classes/command.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'manage_device.dart';
+
 class DeviceDetailsPage extends StatefulWidget {
   final Device device;
 
@@ -60,7 +62,26 @@ class DeviceDetailsPageState extends State<DeviceDetailsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.device.name),
-        backgroundColor: Colors.blueAccent,  // Customize AppBar color
+        backgroundColor: Colors.blueAccent,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Manage Device',
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ManageDevicePage(device: widget.device),
+                ),
+              );
+
+              if (result == true) {
+                // Refresh the device details after name change
+                setState(() {});
+              }
+            },
+          ),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,11 +92,11 @@ class DeviceDetailsPageState extends State<DeviceDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Device Status: Active',  // You can customize this based on your data
-                  style: TextStyle(
+                  'Device Status: Active',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green, // Status color
+                    color: Colors.green,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -102,7 +123,8 @@ class DeviceDetailsPageState extends State<DeviceDetailsPage> {
                 }
 
                 final commands = snapshot.data!
-                    .where((command) => command.deviceIds.contains(widget.device.id))
+                    .where((command) =>
+                    command.deviceIds.contains(widget.device.id))
                     .toList();
 
                 return ListView.builder(
@@ -111,13 +133,13 @@ class DeviceDetailsPageState extends State<DeviceDetailsPage> {
                   itemBuilder: (context, index) {
                     final command = commands[index];
                     return Card(
-                      elevation: 4,  // Add shadow to the card
+                      elevation: 4,
                       margin: const EdgeInsets.only(bottom: 16.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                       child: ListTile(
-                        leading: Icon(
+                        leading: const Icon(
                           Icons.settings,
                           color: Colors.blueAccent,
                           size: 40,
@@ -136,12 +158,14 @@ class DeviceDetailsPageState extends State<DeviceDetailsPage> {
                             color: Colors.grey,
                           ),
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios, color: Colors.blueAccent),
+                        trailing: const Icon(Icons.arrow_forward_ios,
+                            color: Colors.blueAccent),
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CommandDetailsPage(command: command),
+                              builder: (context) =>
+                                  CommandDetailsPage(command: command),
                             ),
                           );
                         },
@@ -155,12 +179,13 @@ class DeviceDetailsPageState extends State<DeviceDetailsPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blueAccent,  // Customize FAB color
+        backgroundColor: Colors.blueAccent,
         onPressed: () async {
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => CreateCommandPage(deviceId: widget.device.id),
+              builder: (context) =>
+                  CreateCommandPage(deviceId: widget.device.id),
             ),
           );
           if (result == true) {
