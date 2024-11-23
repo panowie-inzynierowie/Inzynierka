@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:inzynierka_client/chat.dart';
-import 'package:inzynierka_client/pages/commands.dart';
 import 'package:inzynierka_client/pages/create_space.dart';
 import 'package:inzynierka_client/pages/profile_page.dart';
 import 'package:inzynierka_client/pages/create_device.dart';
@@ -41,24 +40,15 @@ class HomePageState extends State<HomePage> {
         title: Text(
           'Hello, ${context.watch<AppState>().username}',
           style: const TextStyle(
-            fontSize: 22, // Larger font size for the title
-            fontWeight: FontWeight.bold, // Bold title text
-            color: Colors.white, // White text color for better contrast
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.blueAccent, // Custom background color
-        elevation: 2, // Add a slight shadow
-        centerTitle: true, // Center the title
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              // Add functionality for notification icon
-            },
-            tooltip: 'Notifications', // Tooltip for accessibility
-          ),
-        ],
-        automaticallyImplyLeading: false, // Remove back button
+        backgroundColor: Colors.blueAccent,
+        elevation: 2,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -104,7 +94,7 @@ class HomePageState extends State<HomePage> {
                 );
               });
         },
-        backgroundColor: Colors.blueAccent, // Match FAB color to theme
+        backgroundColor: Colors.blueAccent,
         child: const Icon(Icons.chat),
       ),
     );
