@@ -55,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       isLoading = true;
     });
-    Response response;
+    late Response response;
     try {
       response = await http.post(
         Uri.parse('${dotenv.env['API_URL']}/login/'),
@@ -67,19 +67,20 @@ class _LoginPageState extends State<LoginPage> {
           'password': password,
         }),
       );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to log in: $e')));
     } finally {
       setState(() {
         isLoading = false;
       });
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Failed to log in')));
     }
-    ;
+    if (!mounted) return;
+
     if (response.statusCode == 200) {
       await storage.write(key: "username", value: username);
       await storage.write(key: "password", value: password);
-      if (!mounted) return;
       context.read<AppState>().setUsername(username);
       context
           .read<AppState>()
@@ -87,7 +88,6 @@ class _LoginPageState extends State<LoginPage> {
 
       Navigator.pushReplacementNamed(context, '/home');
     } else {
-      if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Failed to log in')));
     }
