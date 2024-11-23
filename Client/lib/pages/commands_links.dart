@@ -21,6 +21,8 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
   String? _ttl;
   CommandsLink? _editingLink;
   List<Map<String, dynamic>> _suggestedLinks = [];
+  bool _isGenerating = false;
+
   @override
   void initState() {
     super.initState();
@@ -186,21 +188,31 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
   }
 
   Future<void> _fetchSuggestedLinks() async {
-    final token = Provider.of<AppState>(context, listen: false).token;
-    final response = await http.get(
-      Uri.parse('${dotenv.env['API_URL']}/api/generate-links/'),
-      headers: {'Authorization': 'Token $token'},
-    );
+    setState(() {
+      _isGenerating = true;
+    });
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        _suggestedLinks = List<Map<String, dynamic>>.from(data['links']);
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to load suggested links')),
+    final token = Provider.of<AppState>(context, listen: false).token;
+    try {
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_URL']}/api/generate-links/'),
+        headers: {'Authorization': 'Token $token'},
       );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _suggestedLinks = List<Map<String, dynamic>>.from(data['links']);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load suggested links')),
+        );
+      }
+    } finally {
+      setState(() {
+        _isGenerating = false;
+      });
     }
   }
 
@@ -245,8 +257,16 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 ElevatedButton(
-                  onPressed: _fetchSuggestedLinks,
-                  child: const Text('Generate'),
+                  onPressed: _isGenerating ? null : _fetchSuggestedLinks,
+                  child: _isGenerating
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Generate'),
                 ),
               ],
             ),
