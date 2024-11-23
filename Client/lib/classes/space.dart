@@ -1,5 +1,5 @@
 class Space {
-  final String name;
+  String name;
   final String? description;
   final int id;
 

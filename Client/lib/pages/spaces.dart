@@ -7,6 +7,8 @@ import 'package:inzynierka_client/state/state.dart';
 import '../classes/space.dart';
 import '../classes/device.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'manage_device.dart';
+import 'package:inzynierka_client/main.dart';
 
 class SpacesPage extends StatefulWidget {
   const SpacesPage({super.key});
@@ -15,7 +17,7 @@ class SpacesPage extends StatefulWidget {
   SpacesPageState createState() => SpacesPageState();
 }
 
-class SpacesPageState extends State<SpacesPage> {
+class SpacesPageState extends State<SpacesPage> with RouteAware {
   late Future<List<Space>> _spacesFuture;
   late Future<List<Device>> _spacelessDevicesFuture;
   int? _selectedDeviceId;
@@ -25,6 +27,27 @@ class SpacesPageState extends State<SpacesPage> {
     super.initState();
     _spacesFuture = fetchSpaces();
     _spacelessDevicesFuture = fetchSpacelessDevices();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    setState(() {
+      _selectedDeviceId = null;
+      _spacesFuture = fetchSpaces();
+      _spacelessDevicesFuture = fetchSpacelessDevices();
+    });
   }
 
   Future<List<Space>> fetchSpaces() async {
@@ -142,19 +165,35 @@ class SpacesPageState extends State<SpacesPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.devices,
-                        size: 24, color: Colors.blueAccent),
-                    const SizedBox(width: 8),
-                    Text(
-                      device.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                InkWell(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ManageDevicePage(device: device),
                       ),
-                    ),
-                  ],
+                    );
+                    if (result == true) {
+                      setState(() {
+                        _spacesFuture = fetchSpaces();
+                        _spacelessDevicesFuture = fetchSpacelessDevices();
+                      });
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      const Icon(Icons.devices,
+                          size: 24, color: Colors.blueAccent),
+                      const SizedBox(width: 8),
+                      Text(
+                        device.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () {

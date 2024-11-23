@@ -76,6 +76,7 @@ class _ManageSpacePageState extends State<ManageSpacePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Space name updated successfully')),
       );
+      Navigator.pop(context, _nameController.text);
     } else {
       setState(() {
         _errorMessage = 'Failed to update space name';
@@ -114,7 +115,8 @@ class _ManageSpacePageState extends State<ManageSpacePage> {
     final username = _usernameController.text;
 
     final response = await http.post(
-      Uri.parse('${dotenv.env['API_URL']}/api/spaces/${widget.spaceId}/add_user/'),
+      Uri.parse(
+          '${dotenv.env['API_URL']}/api/spaces/${widget.spaceId}/add_user/'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Token $token',
@@ -136,7 +138,8 @@ class _ManageSpacePageState extends State<ManageSpacePage> {
     final token = Provider.of<AppState>(context, listen: false).token;
 
     final response = await http.delete(
-      Uri.parse('${dotenv.env['API_URL']}/api/spaces/${widget.spaceId}/remove_user/$userId/'),
+      Uri.parse(
+          '${dotenv.env['API_URL']}/api/spaces/${widget.spaceId}/remove_user/$userId/'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Token $token',

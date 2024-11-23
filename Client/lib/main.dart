@@ -17,6 +17,8 @@ Future main() async {
   );
 }
 
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -32,6 +34,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomePage(),
       },
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [routeObserver],
     );
   }
 }

@@ -186,14 +186,19 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
             IconButton(
               icon: Icon(Icons.settings),
               tooltip: 'Manage Space',
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final newName = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
                         ManageSpacePage(spaceId: widget.space.id),
                   ),
                 );
+                if (newName != null) {
+                  setState(() {
+                    widget.space.name = newName;
+                  });
+                }
               },
             ),
           ],

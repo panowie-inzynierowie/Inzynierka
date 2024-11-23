@@ -51,7 +51,7 @@ class _ManageDevicePageState extends State<ManageDevicePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Device name updated successfully')),
       );
-      Navigator.pop(context, true); // Notify that the device name was updated
+      Navigator.pop(context, true);
     } else {
       setState(() {
         _errorMessage = 'Failed to update device name';
