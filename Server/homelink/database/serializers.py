@@ -27,10 +27,13 @@ class SpaceSerializer(serializers.ModelSerializer):
         return space
 
 
-class DeviceUpdateSpaceSerializer(serializers.ModelSerializer):
+class DeviceUpdateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+    description = serializers.CharField(required=False)
+
     class Meta:
         model = Device
-        fields = ["space"]
+        fields = ["space", "name", "description"]
 
 
 class DeviceSerializer(serializers.ModelSerializer):

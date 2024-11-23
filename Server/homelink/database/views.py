@@ -45,7 +45,7 @@ class SpaceDevicesView(viewsets.ModelViewSet):
 class DeviceViewSet(viewsets.ModelViewSet, MultiSerializerMixin):
     default_serializer_class = DeviceSerializer
     serializer_classes = {
-        "update": DeviceUpdateSpaceSerializer,
+        "update": DeviceUpdateSerializer,
     }
     filter_backends = [DjangoFilterBackend]
     filterset_class = DeviceFilter
