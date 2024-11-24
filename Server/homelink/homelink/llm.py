@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from database.serializers import DeviceSerializer
 from database.models.models import Command, Device
 
+from datetime import datetime
+
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -29,6 +31,8 @@ class CommandData(BaseModel):
 class CommandClass(BaseModel):
     device_id: int
     data: CommandData
+    scheduled_at: Optional[str]
+    repeat_interval: Optional[str]
 
 
 class ModelResponse(BaseModel):
@@ -49,7 +53,9 @@ def get_structured_response(
                 "Actions to perform on user's request put in commands_to_execute field."
                 "Here are the devices user can access: "
                 + json.dumps(d)
-                + "If device has has_input_action flag set to True, you can provide any string input value in the action field",
+                + "If device has has_input_action flag set to True, you can provide any string input value in the action field "
+                "If you want to schedule command, set scheduled_at and repeat_interval if it should repeat "
+                f"current time is: {datetime.now()}",
             },
             {"role": "user", "content": prompt},
         ],
@@ -65,6 +71,8 @@ def get_structured_response(
             device=device,
             description=f"{command.data.name} {command.data.action}",
             data=command.data.model_dump(),
+            scheduled_at=command.scheduled_at,
+            repeat_interval=command.repeat_interval,
         )
 
     print(text_response)
