@@ -4,6 +4,7 @@ import threading
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -86,6 +87,7 @@ class CommandViewSet(viewsets.ModelViewSet):
             return CommandForDeviceSerializer(*args, **kwargs)
 
     def get_queryset(self):
+        xd = timezone.now() + timezone.timedelta(hours=1)
         qs = Command.objects.filter(
             Q(device__owner=self.request.user.pk)
             | Q(device__account=self.request.user.pk)
@@ -93,7 +95,9 @@ class CommandViewSet(viewsets.ModelViewSet):
 
         if self.request.query_params.get("all", None):
             return qs
-        return qs.filter(executed=False)
+        return qs.filter(executed=False).filter(
+            Q(scheduled_at__isnull=True) | Q(scheduled_at__lte=xd)
+        )
 
     def perform_create(self, serializer):
         serializer.save(
@@ -114,7 +118,7 @@ class CommandViewSet(viewsets.ModelViewSet):
         instance.executed = True
         instance.save()
 
-    def list(self, request, *args, **kwargs):
+    def list(self, _, *args, **kwargs):
         try:
             timeout = 120
             result = []
