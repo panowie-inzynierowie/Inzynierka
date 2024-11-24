@@ -7,6 +7,7 @@ import 'package:inzynierka_client/state/state.dart';
 import '../classes/device.dart';
 import '../classes/space.dart';
 import 'manage_space.dart';
+import 'manage_device.dart';
 
 class SpaceDetailsPage extends StatefulWidget {
   final Space space;
@@ -228,7 +229,36 @@ class SpaceDetailsPageState extends State<SpaceDetailsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(device.name),
+                              InkWell(
+                                onTap: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ManageDevicePage(device: device),
+                                    ),
+                                  );
+                                  if (result == true) {
+                                    setState(() {
+                                      _devicesFuture = fetchDevices();
+                                    });
+                                  }
+                                },
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.devices,
+                                        size: 24, color: Colors.blueAccent),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      device.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               ElevatedButton(
                                 onPressed: () => detachDevice(device.id),
                                 style: ElevatedButton.styleFrom(
