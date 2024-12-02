@@ -68,6 +68,19 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
     }
   }
 
+  String _getDeviceName(int deviceId) {
+    final device = _devices.firstWhere(
+      (d) => d.id == deviceId,
+      orElse: () => Device(
+        id: deviceId,
+        name: 'Unknown Device',
+        description: '',
+        data: {},
+      ),
+    );
+    return device.name;
+  }
+
   Future<void> _createLink() async {
     final token = Provider.of<AppState>(context, listen: false).token;
     final response = await http.post(
@@ -291,7 +304,7 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
                                         padding: const EdgeInsets.only(
                                             left: 16.0, top: 4.0),
                                         child: Text(
-                                            '${trigger['component_name']} (${trigger['action']}) on Device ${trigger['device_id']}'),
+                                            '${trigger['component_name']} (${trigger['action']}) on device ${_getDeviceName(trigger['device_id'])}'),
                                       )),
                               const SizedBox(height: 8),
                               const Text('Results:',
@@ -302,7 +315,7 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
                                         padding: const EdgeInsets.only(
                                             left: 16.0, top: 4.0),
                                         child: Text(
-                                            '${result['data']['name']} (${result['data']['action']}) on Device ${result['device_id']}'),
+                                            '${result['data']['name']} (${result['data']['action']}) on device ${_getDeviceName(result['device_id'])}'),
                                       )),
                               if (link['ttl'] != 0 && link['ttl'] != null)
                                 Text('TTL: ${link['ttl']} seconds'),
@@ -359,12 +372,13 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
   Widget _buildLinkCard(CommandsLink link) {
     return Card(
       child: ListTile(
-        title: Text('Link ID: ${link.id}'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Triggers: ${link.triggers.length}'),
-            Text('Results: ${link.results.length}'),
+            Text(
+                'Triggers: ${link.triggers.map((t) => '${t['component_name']}: ${t['action']}').join(', ')}'),
+            Text(
+                'Results: ${link.results.map((r) => '${r['data']['name']}: ${r['data']['action']}').join(', ')}'),
             if (link.ttl != null) Text('TTL: ${link.ttl}'),
           ],
         ),
