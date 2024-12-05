@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-
+import 'package:flutter/material.dart';
 import 'package:inzynierka_client/classes/chat.dart';
 
 class AppState with ChangeNotifier, DiagnosticableTreeMixin {
@@ -8,6 +8,8 @@ class AppState with ChangeNotifier, DiagnosticableTreeMixin {
   List<ChatMessage> _messages = [
     ChatMessage(content: "Hello", author: Author.llm),
   ];
+
+  ThemeMode _themeMode = ThemeMode.light;
 
   String get token => _token;
 
@@ -30,9 +32,17 @@ class AppState with ChangeNotifier, DiagnosticableTreeMixin {
     notifyListeners();
   }
 
+  ThemeMode get themeMode => _themeMode;
+
+  void toggleTheme() {
+    _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
+  }
+
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties.add(StringProperty('username', username));
+    properties.add(EnumProperty('themeMode', _themeMode));
   }
 }
