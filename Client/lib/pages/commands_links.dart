@@ -414,7 +414,7 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_editingLink == null ? 'Create New Link' : 'Edit Link'),
+            Text(_editingLink == null ? 'Create New Link' : 'Edit Link', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 16),
             Text('Triggers:'),
             ..._buildTriggersList(),
@@ -518,86 +518,92 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
       List<Map<String, dynamic>>.from(selectedDevice.data!['components']);
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        DropdownButton<int>(
-          value: trigger['device_id'],
-          hint: const Text('Select Device'),
-          items: _devices.map((Device device) {
-            return DropdownMenuItem<int>(
-              value: device.id,
-              child: Text(device.name),
-            );
-          }).toList(),
-          onChanged: (int? deviceId) {
-            setState(() {
-              _triggers[index] = {
-                'device_id': deviceId,
-                'component_name': null,
-                'action': null,
-                'satisfied_at': null,
-              };
-            });
-          },
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DropdownButton<int>(
+              value: trigger['device_id'],
+              hint: const Text('Select Device'),
+              items: _devices.map((Device device) {
+                return DropdownMenuItem<int>(
+                  value: device.id,
+                  child: Text(device.name),
+                );
+              }).toList(),
+              onChanged: (int? deviceId) {
+                setState(() {
+                  _triggers[index] = {
+                    'device_id': deviceId,
+                    'component_name': null,
+                    'action': null,
+                    'satisfied_at': null,
+                  };
+                });
+              },
+            ),
+            DropdownButton<String>(
+              value: trigger['component_name'],
+              hint: const Text('Select Component'),
+              items: selectedDevice == null
+                  ? []
+                  : components.map((component) {
+                final componentName = component['name']?.toString();
+                return DropdownMenuItem<String>(
+                  value: componentName,
+                  child: Text(componentName ?? ''),
+                );
+              }).toList(),
+              onChanged: (String? componentName) {
+                setState(() {
+                  _triggers[index] = {
+                    ..._triggers[index],
+                    'component_name': componentName,
+                    'action': null,
+                  };
+                });
+              },
+            ),
+            DropdownButton<String>(
+              value: trigger['action'],
+              hint: const Text('Select Action'),
+              items: selectedDevice == null || trigger['component_name'] == null
+                  ? []
+                  : components
+                  .firstWhere(
+                    (c) =>
+                c['name'].toString() == trigger['component_name'],
+                orElse: () => {'actions': []},
+              )['actions']
+                  ?.map<DropdownMenuItem<String>>((action) {
+                return DropdownMenuItem<String>(
+                  value: action.toString(),
+                  child: Text(action.toString()),
+                );
+              }).toList() ??
+                  [],
+              onChanged: (String? action) {
+                setState(() {
+                  _triggers[index] = {
+                    ..._triggers[index],
+                    'action': action,
+                  };
+                });
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () {
+                setState(() {
+                  _triggers.removeAt(index);
+                });
+              },
+            ),
+          ],
         ),
-        DropdownButton<String>(
-          value: trigger['component_name'],
-          hint: const Text('Select Component'),
-          items: selectedDevice == null
-              ? []
-              : components.map((component) {
-            final componentName = component['name']?.toString();
-            return DropdownMenuItem<String>(
-              value: componentName,
-              child: Text(componentName ?? ''),
-            );
-          }).toList(),
-          onChanged: (String? componentName) {
-            setState(() {
-              _triggers[index] = {
-                ..._triggers[index],
-                'component_name': componentName,
-                'action': null,
-              };
-            });
-          },
-        ),
-        DropdownButton<String>(
-          value: trigger['action'],
-          hint: const Text('Select Action'),
-          items: selectedDevice == null || trigger['component_name'] == null
-              ? []
-              : components
-              .firstWhere(
-                (c) => c['name'].toString() == trigger['component_name'],
-            orElse: () => {'actions': []},
-          )['actions']
-              ?.map<DropdownMenuItem<String>>((action) {
-            return DropdownMenuItem<String>(
-              value: action.toString(),
-              child: Text(action.toString()),
-            );
-          }).toList() ??
-              [],
-          onChanged: (String? action) {
-            setState(() {
-              _triggers[index] = {
-                ..._triggers[index],
-                'action': action,
-              };
-            });
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.delete),
-          onPressed: () {
-            setState(() {
-              _triggers.removeAt(index);
-            });
-          },
-        ),
-      ],
+      ),
     );
   }
 
@@ -629,89 +635,96 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
       List<Map<String, dynamic>>.from(selectedDevice.data!['components']);
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        DropdownButton<int>(
-          value: result['device_id'],
-          hint: const Text('Select Device'),
-          items: _devices.map((Device device) {
-            return DropdownMenuItem<int>(
-              value: device.id,
-              child: Text(device.name),
-            );
-          }).toList(),
-          onChanged: (int? deviceId) {
-            setState(() {
-              _results[index] = {
-                'device_id': deviceId,
-                'data': {'name': null, 'action': null},
-              };
-            });
-          },
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DropdownButton<int>(
+              value: result['device_id'],
+              hint: const Text('Select Device'),
+              items: _devices.map((Device device) {
+                return DropdownMenuItem<int>(
+                  value: device.id,
+                  child: Text(device.name),
+                );
+              }).toList(),
+              onChanged: (int? deviceId) {
+                setState(() {
+                  _results[index] = {
+                    'device_id': deviceId,
+                    'data': {'name': null, 'action': null},
+                  };
+                });
+              },
+            ),
+            DropdownButton<String>(
+              value: result['data']?['name'],
+              hint: const Text('Select Component'),
+              items: selectedDevice == null
+                  ? []
+                  : components.map((component) {
+                final componentName = component['name']?.toString();
+                return DropdownMenuItem<String>(
+                  value: componentName,
+                  child: Text(componentName ?? ''),
+                );
+              }).toList(),
+              onChanged: (String? componentName) {
+                setState(() {
+                  _results[index] = {
+                    ..._results[index],
+                    'data': {
+                      'name': componentName,
+                      'action': null,
+                    },
+                  };
+                });
+              },
+            ),
+            DropdownButton<String>(
+              value: result['data']?['action'],
+              hint: const Text('Select Action'),
+              items: selectedDevice == null || result['data']?['name'] == null
+                  ? []
+                  : components
+                  .firstWhere(
+                    (c) =>
+                c['name'].toString() ==
+                    result['data']?['name'],
+                orElse: () => {'actions': []},
+              )['actions']
+                  ?.map<DropdownMenuItem<String>>((action) {
+                return DropdownMenuItem<String>(
+                  value: action.toString(),
+                  child: Text(action.toString()),
+                );
+              }).toList() ??
+                  [],
+              onChanged: (String? action) {
+                setState(() {
+                  _results[index] = {
+                    ..._results[index],
+                    'data': {
+                      ..._results[index]['data'],
+                      'action': action,
+                    },
+                  };
+                });
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () {
+                setState(() {
+                  _results.removeAt(index);
+                });
+              },
+            ),
+          ],
         ),
-        DropdownButton<String>(
-          value: result['data']?['name'],
-          hint: const Text('Select Component'),
-          items: selectedDevice == null
-              ? []
-              : components.map((component) {
-            final componentName = component['name']?.toString();
-            return DropdownMenuItem<String>(
-              value: componentName,
-              child: Text(componentName ?? ''),
-            );
-          }).toList(),
-          onChanged: (String? componentName) {
-            setState(() {
-              _results[index] = {
-                ..._results[index],
-                'data': {
-                  'name': componentName,
-                  'action': null,
-                },
-              };
-            });
-          },
-        ),
-        DropdownButton<String>(
-          value: result['data']?['action'],
-          hint: const Text('Select Action'),
-          items: selectedDevice == null || result['data']?['name'] == null
-              ? []
-              : components
-              .firstWhere(
-                (c) => c['name'].toString() == result['data']?['name'],
-            orElse: () => {'actions': []},
-          )['actions']
-              ?.map<DropdownMenuItem<String>>((action) {
-            return DropdownMenuItem<String>(
-              value: action.toString(),
-              child: Text(action.toString()),
-            );
-          }).toList() ??
-              [],
-          onChanged: (String? action) {
-            setState(() {
-              _results[index] = {
-                ..._results[index],
-                'data': {
-                  ..._results[index]['data'],
-                  'action': action,
-                },
-              };
-            });
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.delete),
-          onPressed: () {
-            setState(() {
-              _results.removeAt(index);
-            });
-          },
-        ),
-      ],
+      ),
     );
   }
 
