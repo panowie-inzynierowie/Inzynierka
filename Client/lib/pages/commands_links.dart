@@ -501,123 +501,93 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
   Widget _buildTriggerItem(int index, Map<String, dynamic> trigger) {
     Device? selectedDevice = trigger['device_id'] != null
         ? _devices.firstWhere(
-            (d) => d.id == trigger['device_id'],
-            orElse: () => Device(
-              id: trigger['device_id'],
-              name: 'Unknown Device',
-              description: '',
-              data: {},
-            ),
-          )
+          (d) => d.id == trigger['device_id'],
+      orElse: () => Device(
+        id: trigger['device_id'],
+        name: 'Unknown Device',
+        description: '',
+        data: {},
+      ),
+    )
         : null;
 
     List<Map<String, dynamic>> components = [];
     if (selectedDevice?.data != null &&
         selectedDevice!.data!['components'] is List) {
       components =
-          List<Map<String, dynamic>>.from(selectedDevice.data!['components']);
+      List<Map<String, dynamic>>.from(selectedDevice.data!['components']);
     }
 
-    String? compositeKey;
-    if (trigger['device_id'] != null && trigger['component_name'] != null) {
-      try {
-        compositeKey = '${trigger['device_id']}_${trigger['component_name']}';
-      } catch (e) {
-        print('Error creating composite key: $e');
-      }
-    }
-
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: DropdownButton<int>(
-            value: trigger['device_id'],
-            hint: const Text('Select Device'),
-            items: _devices.map((Device device) {
-              return DropdownMenuItem<int>(
-                value: device.id,
-                child: Text(device.name),
-              );
-            }).toList(),
-            onChanged: (int? deviceId) {
-              setState(() {
-                _triggers[index] = {
-                  'device_id': deviceId,
-                  'component_name': null,
-                  'action': null,
-                  'satisfied_at': null,
-                };
-              });
-            },
-          ),
+        DropdownButton<int>(
+          value: trigger['device_id'],
+          hint: const Text('Select Device'),
+          items: _devices.map((Device device) {
+            return DropdownMenuItem<int>(
+              value: device.id,
+              child: Text(device.name),
+            );
+          }).toList(),
+          onChanged: (int? deviceId) {
+            setState(() {
+              _triggers[index] = {
+                'device_id': deviceId,
+                'component_name': null,
+                'action': null,
+                'satisfied_at': null,
+              };
+            });
+          },
         ),
-        Expanded(
-          child: DropdownButton<String>(
-            value: compositeKey,
-            hint: const Text('Select Component'),
-            items: selectedDevice == null
-                ? []
-                : components
-                    .map((component) {
-                      final componentName = component['name']?.toString();
-                      if (componentName == null) return null;
-                      final uniqueKey = '${selectedDevice.id}_$componentName';
-                      return DropdownMenuItem<String>(
-                        value: uniqueKey,
-                        child: Text(componentName),
-                      );
-                    })
-                    .whereType<DropdownMenuItem<String>>()
-                    .toList(),
-            onChanged: selectedDevice == null
-                ? null
-                : (String? uniqueKey) {
-                    if (uniqueKey != null) {
-                      final componentName = uniqueKey.split('_')[1];
-                      setState(() {
-                        _triggers[index] = {
-                          ..._triggers[index],
-                          'component_name': componentName,
-                          'action': null,
-                        };
-                      });
-                    }
-                  },
-          ),
+        DropdownButton<String>(
+          value: trigger['component_name'],
+          hint: const Text('Select Component'),
+          items: selectedDevice == null
+              ? []
+              : components.map((component) {
+            final componentName = component['name']?.toString();
+            return DropdownMenuItem<String>(
+              value: componentName,
+              child: Text(componentName ?? ''),
+            );
+          }).toList(),
+          onChanged: (String? componentName) {
+            setState(() {
+              _triggers[index] = {
+                ..._triggers[index],
+                'component_name': componentName,
+                'action': null,
+              };
+            });
+          },
         ),
-        Expanded(
-          child: DropdownButton<String>(
-            value: trigger['action']?.toString(),
-            hint: const Text('Select Action'),
-            items: selectedDevice == null || trigger['component_name'] == null
-                ? []
-                : components
-                        .firstWhere(
-                      (c) =>
-                          c['name'].toString() ==
-                          trigger['component_name'].toString(),
-                      orElse: () => {'actions': []},
-                    )['actions']
-                        ?.map<DropdownMenuItem<String>>((action) {
-                      final actionStr = action.toString();
-                      return DropdownMenuItem<String>(
-                        value: actionStr,
-                        child: Text(actionStr),
-                      );
-                    })?.toList() ??
-                    [],
-            onChanged:
-                selectedDevice == null || trigger['component_name'] == null
-                    ? null
-                    : (String? action) {
-                        setState(() {
-                          _triggers[index] = {
-                            ..._triggers[index],
-                            'action': action,
-                          };
-                        });
-                      },
-          ),
+        DropdownButton<String>(
+          value: trigger['action'],
+          hint: const Text('Select Action'),
+          items: selectedDevice == null || trigger['component_name'] == null
+              ? []
+              : components
+              .firstWhere(
+                (c) => c['name'].toString() == trigger['component_name'],
+            orElse: () => {'actions': []},
+          )['actions']
+              ?.map<DropdownMenuItem<String>>((action) {
+            return DropdownMenuItem<String>(
+              value: action.toString(),
+              child: Text(action.toString()),
+            );
+          }).toList() ??
+              [],
+          onChanged: (String? action) {
+            setState(() {
+              _triggers[index] = {
+                ..._triggers[index],
+                'action': action,
+              };
+            });
+          },
         ),
         IconButton(
           icon: const Icon(Icons.delete),
@@ -642,127 +612,96 @@ class _CreateLinksScreenState extends State<CreateLinksScreen> {
   Widget _buildResultItem(int index, Map<String, dynamic> result) {
     Device? selectedDevice = result['device_id'] != null
         ? _devices.firstWhere(
-            (d) => d.id == result['device_id'],
-            orElse: () => Device(
-              id: result['device_id'],
-              name: 'Unknown Device',
-              description: '',
-              data: {},
-            ),
-          )
+          (d) => d.id == result['device_id'],
+      orElse: () => Device(
+        id: result['device_id'],
+        name: 'Unknown Device',
+        description: '',
+        data: {},
+      ),
+    )
         : null;
 
     List<Map<String, dynamic>> components = [];
     if (selectedDevice?.data != null &&
         selectedDevice!.data!['components'] is List) {
       components =
-          List<Map<String, dynamic>>.from(selectedDevice.data!['components']);
+      List<Map<String, dynamic>>.from(selectedDevice.data!['components']);
     }
 
-    String? compositeKey;
-    if (result['device_id'] != null && result['data']?['name'] != null) {
-      try {
-        compositeKey = '${result['device_id']}_${result['data']?['name']}';
-      } catch (e) {
-        print('Error creating composite key: $e');
-      }
-    }
-
-    List<String> actions = [];
-    if (result['data']?['name'] != null) {
-      final selectedComponent = components.firstWhere(
-        (c) => c['name'].toString() == result['data']!['name'].toString(),
-        orElse: () => {'actions': []},
-      );
-      if (selectedComponent['actions'] is List) {
-        actions = List<String>.from(
-          selectedComponent['actions'].map((a) => a.toString()),
-        );
-      }
-    }
-
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: DropdownButton<int>(
-            value: result['device_id'],
-            hint: const Text('Select Device'),
-            items: _devices.map((Device device) {
-              return DropdownMenuItem<int>(
-                value: device.id,
-                child: Text(device.name),
-              );
-            }).toList(),
-            onChanged: (int? deviceId) {
-              setState(() {
-                _results[index] = {
-                  'device_id': deviceId,
-                  'data': {'name': null, 'action': null},
-                };
-              });
-            },
-          ),
+        DropdownButton<int>(
+          value: result['device_id'],
+          hint: const Text('Select Device'),
+          items: _devices.map((Device device) {
+            return DropdownMenuItem<int>(
+              value: device.id,
+              child: Text(device.name),
+            );
+          }).toList(),
+          onChanged: (int? deviceId) {
+            setState(() {
+              _results[index] = {
+                'device_id': deviceId,
+                'data': {'name': null, 'action': null},
+              };
+            });
+          },
         ),
-        Expanded(
-          child: DropdownButton<String>(
-            value: compositeKey,
-            hint: const Text('Select Component'),
-            items: selectedDevice == null
-                ? []
-                : components
-                    .map((component) {
-                      final componentName = component['name']?.toString();
-                      if (componentName == null) return null;
-                      final uniqueKey = '${selectedDevice.id}_$componentName';
-                      return DropdownMenuItem<String>(
-                        value: uniqueKey,
-                        child: Text(componentName),
-                      );
-                    })
-                    .whereType<DropdownMenuItem<String>>()
-                    .toList(),
-            onChanged: selectedDevice == null
-                ? null
-                : (String? uniqueKey) {
-                    if (uniqueKey != null) {
-                      final componentName = uniqueKey.split('_')[1];
-                      setState(() {
-                        _results[index] = {
-                          ..._results[index],
-                          'data': {
-                            'name': componentName,
-                            'action': null,
-                          },
-                        };
-                      });
-                    }
-                  },
-          ),
+        DropdownButton<String>(
+          value: result['data']?['name'],
+          hint: const Text('Select Component'),
+          items: selectedDevice == null
+              ? []
+              : components.map((component) {
+            final componentName = component['name']?.toString();
+            return DropdownMenuItem<String>(
+              value: componentName,
+              child: Text(componentName ?? ''),
+            );
+          }).toList(),
+          onChanged: (String? componentName) {
+            setState(() {
+              _results[index] = {
+                ..._results[index],
+                'data': {
+                  'name': componentName,
+                  'action': null,
+                },
+              };
+            });
+          },
         ),
-        Expanded(
-          child: DropdownButton<String>(
-            value: result['data']?['action']?.toString(),
-            hint: const Text('Select Action'),
-            items: actions.map((action) {
-              return DropdownMenuItem<String>(
-                value: action,
-                child: Text(action),
-              );
-            }).toList(),
-            onChanged: selectedDevice == null || result['data']?['name'] == null
-                ? null
-                : (String? action) {
-                    setState(() {
-                      _results[index] = {
-                        ..._results[index],
-                        'data': {
-                          ..._results[index]['data'] as Map<String, dynamic>,
-                          'action': action,
-                        },
-                      };
-                    });
-                  },
-          ),
+        DropdownButton<String>(
+          value: result['data']?['action'],
+          hint: const Text('Select Action'),
+          items: selectedDevice == null || result['data']?['name'] == null
+              ? []
+              : components
+              .firstWhere(
+                (c) => c['name'].toString() == result['data']?['name'],
+            orElse: () => {'actions': []},
+          )['actions']
+              ?.map<DropdownMenuItem<String>>((action) {
+            return DropdownMenuItem<String>(
+              value: action.toString(),
+              child: Text(action.toString()),
+            );
+          }).toList() ??
+              [],
+          onChanged: (String? action) {
+            setState(() {
+              _results[index] = {
+                ..._results[index],
+                'data': {
+                  ..._results[index]['data'],
+                  'action': action,
+                },
+              };
+            });
+          },
         ),
         IconButton(
           icon: const Icon(Icons.delete),
