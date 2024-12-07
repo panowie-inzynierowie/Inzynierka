@@ -15,12 +15,12 @@ class CreateSpacePage extends StatefulWidget {
 class _CreateSpacePageState extends State<CreateSpacePage> {
   final TextEditingController _spaceNameController = TextEditingController();
   final TextEditingController _spaceDescriptionController =
-  TextEditingController();
+      TextEditingController();
   String? _errorMessage;
 
   void _createSpace() async {
     setState(() {
-      _errorMessage = null; // Reset error message
+      _errorMessage = null;
     });
 
     try {
@@ -30,7 +30,7 @@ class _CreateSpacePageState extends State<CreateSpacePage> {
         Uri.parse('${dotenv.env['API_URL']}/api/spaces/add/'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Token $token', // Use the token from AppState
+          'Authorization': 'Token $token',
         },
         body: jsonEncode(<String, String>{
           'name': _spaceNameController.text,
@@ -39,7 +39,7 @@ class _CreateSpacePageState extends State<CreateSpacePage> {
       );
 
       if (response.statusCode == 201) {
-        Navigator.pop(context, true); // Return true when space is created
+        Navigator.of(context).pushReplacementNamed('/home');
       } else {
         setState(() {
           _errorMessage = 'Failed to create space: ${response.reasonPhrase}';
@@ -60,7 +60,6 @@ class _CreateSpacePageState extends State<CreateSpacePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Space Name Input
             TextField(
               controller: _spaceNameController,
               decoration: InputDecoration(
@@ -76,8 +75,6 @@ class _CreateSpacePageState extends State<CreateSpacePage> {
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
-
-            // Space Description Input
             TextField(
               controller: _spaceDescriptionController,
               decoration: InputDecoration(
@@ -93,8 +90,6 @@ class _CreateSpacePageState extends State<CreateSpacePage> {
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-
-            // Error Message Display
             if (_errorMessage != null) ...[
               const SizedBox(height: 20),
               Text(
@@ -102,10 +97,7 @@ class _CreateSpacePageState extends State<CreateSpacePage> {
                 style: const TextStyle(color: Colors.red, fontSize: 16),
               ),
             ],
-
-            const Spacer(), // Pushes the button to the bottom
-
-            // Create Button
+            const Spacer(),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
