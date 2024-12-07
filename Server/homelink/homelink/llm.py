@@ -41,7 +41,7 @@ class ModelResponse(BaseModel):
 
 
 def get_structured_response(
-    prompt, response_format=ModelResponse, devices=None, user=None
+    messages, response_format=ModelResponse, devices=None, user=None
 ):
     d = DeviceSerializer(devices, many=True).data
     response = client.beta.chat.completions.parse(
@@ -57,7 +57,7 @@ def get_structured_response(
                 "If you want to schedule command, set scheduled_at and repeat_interval if it should repeat "
                 f"current time is: {datetime.now()}",
             },
-            {"role": "user", "content": prompt},
+            *messages,
         ],
         response_format=response_format,
     )

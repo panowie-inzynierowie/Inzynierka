@@ -55,7 +55,7 @@ class ChatDialogState extends State<ChatDialog> {
     fieldText.value = TextEditingValue(text: result.recognizedWords);
   }
 
-  Future<void> _sendMessage(String message) async {
+  Future<void> _sendMessages(String message) async {
     final token = Provider.of<AppState>(context, listen: false).token;
     final url = Uri.parse('${dotenv.env['API_URL']}/api/chat/');
 
@@ -70,24 +70,24 @@ class ChatDialogState extends State<ChatDialog> {
           "Content-Type": "application/json",
           'Authorization': 'Token $token',
         },
-        body: jsonEncode({"prompt": message}),
+        body: json.encode(messages),
       );
 
       print("Response status code: ${response.statusCode}");
       print("Response body: ${response.body}");
 
       if (response.statusCode == 200) {
-        final decodedResponse = utf8.decode(response.bodyBytes);  // Dekodowanie jako UTF-8
+        final decodedResponse = utf8.decode(response.bodyBytes);
         final data = jsonDecode(decodedResponse);
         final chatResponse = data['response'];
 
-        // Upewnij się, że chatResponse jest String
         if (chatResponse is Map) {
           print("Warning: chatResponse is a map, not a string.");
         }
 
         setState(() {
-          messages.add(ChatMessage(author: Author.llm, content: chatResponse.toString()));
+          messages.add(ChatMessage(
+              author: Author.llm, content: chatResponse.toString()));
         });
       } else {
         throw Exception('Failed to load response');
@@ -98,7 +98,6 @@ class ChatDialogState extends State<ChatDialog> {
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -182,7 +181,7 @@ class ChatDialogState extends State<ChatDialog> {
                     ),
                   ),
                   onFieldSubmitted: (value) {
-                    _sendMessage(value);
+                    _sendMessages(value);
                     fieldText.clear();
                   },
                 ),

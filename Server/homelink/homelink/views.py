@@ -41,17 +41,30 @@ class CreateUserView(CreateAPIView):
 
 class ChatGPTView(APIView):
     def post(self, request):
-        prompt = request.data.get("prompt", None)
-        if not prompt:
+        messages = request.data
+        if not messages:
             return Response(
                 {"error": "Prompt is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        messages = [
+            (
+                {"role": "system", "content": x["content"]}
+                if x["author"] == "Author.llm"
+                else {"role": "user", "content": x["content"]}
+            )
+            for x in messages
+        ]
+
         try:
             response = get_structured_response(
-                prompt, devices=request.user.get_user_devices(), user=request.user
+                messages, devices=request.user.get_user_devices(), user=request.user
             )
-            return Response({"response": response}, status=status.HTTP_200_OK, content_type="application/json; charset=utf-8")
+            return Response(
+                {"response": response},
+                status=status.HTTP_200_OK,
+                content_type="application/json; charset=utf-8",
+            )
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
