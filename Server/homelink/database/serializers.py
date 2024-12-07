@@ -58,6 +58,8 @@ class DeviceSerializer(serializers.ModelSerializer):
 
 
 class CommandSerializer(serializers.ModelSerializer):
+    device__name = serializers.CharField(source="device.name")
+
     class Meta:
         model = Command
         fields = [
@@ -68,6 +70,7 @@ class CommandSerializer(serializers.ModelSerializer):
             "data",
             "self_execute",
             "executed",
+            "device__name",
         ]
 
 

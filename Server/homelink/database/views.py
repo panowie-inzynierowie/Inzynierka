@@ -116,11 +116,16 @@ class CommandViewSet(viewsets.ModelViewSet):
         )
 
     def perform_destroy(self, instance: Command):
+        if self.request.query_params.get("cancel", None):
+            instance.delete()
+            return
         CommandsLink.check_triggers(instance.device.pk, instance.data)
         instance.executed = True
         instance.save()
 
-    def list(self, _, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
+        if request.query_params.get("all", None):
+            return super().list(request, *args, **kwargs)
         try:
             timeout = 120
             result = []
