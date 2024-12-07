@@ -60,7 +60,15 @@ class DeviceSerializer(serializers.ModelSerializer):
 class CommandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Command
-        fields = ["id", "description", "scheduled_at", "device", "data", "self_execute"]
+        fields = [
+            "id",
+            "description",
+            "scheduled_at",
+            "device",
+            "data",
+            "self_execute",
+            "executed",
+        ]
 
 
 class CommandForDeviceSerializer(serializers.ModelSerializer):

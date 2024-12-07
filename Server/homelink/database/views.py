@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from .mixins import MultiSerializerMixin
 
-from .filters import DeviceFilter
+from .filters import DeviceFilter, CommandFilter
 from .models.models import *
 from .serializers import *
 from django_filters.rest_framework import DjangoFilterBackend
@@ -79,6 +79,8 @@ class SpaceViewSet(viewsets.ModelViewSet):
 
 class CommandViewSet(viewsets.ModelViewSet):
     serializer_class = CommandSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = CommandFilter
 
     def get_serializer(self, *args, **kwargs):
         if self.request.query_params.get("all", None):
@@ -128,7 +130,7 @@ class CommandViewSet(viewsets.ModelViewSet):
                 nonlocal result
                 start_time = time.time()
                 while time.time() - start_time < timeout:
-                    queryset = self.get_queryset()
+                    queryset = self.filter_queryset(self.get_queryset())
                     if queryset.exists():
                         result = self.get_serializer(queryset, many=True).data
                         stop_event.set()
