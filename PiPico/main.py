@@ -9,11 +9,41 @@ import uos as os
 import urandom as random
 import ubinascii
 import gc
+import re
 
 led = machine.Pin("LED", machine.Pin.OUT)
 led.off()
 last_time = 0
 registered = False
+servo = machine.PWM(machine.Pin(16))
+servo.freq(50)
+
+
+CLOCKWISE_DUTY = 3757
+STOP_DUTY = 4915
+ANTI_CLOCKWISE_DUTY = 5260
+servo.duty_u16(STOP_DUTY)
+pattern = r"(\d+)\s*(l|left|r|right)"
+
+
+def move_servo(action: str):
+    pos = 0
+    while pos < len(action):
+        match = re.search(pattern, action[pos:])
+        if not match:
+            break
+        number = match.group(1)
+        direction = match.group(2)
+
+        if direction in ["l", "left"]:
+            servo.duty_u16(ANTI_CLOCKWISE_DUTY)
+            utime.sleep(int(number))
+        elif direction in ["r", "right"]:
+            servo.duty_u16(CLOCKWISE_DUTY)
+            utime.sleep(int(number))
+
+        servo.duty_u16(STOP_DUTY)
+        pos += match.end()
 
 
 def movement_detector_handler(_):
@@ -130,8 +160,14 @@ DATA_PAYLOAD = {
             {
                 "name": "Movement detector",
                 "actions": ["detected"],
-                "has_input_action": True,
+                "has_input_action": False,
                 "is_output": True,
+            },
+            {
+                "name": "Servo",
+                "actions": ["left", "right"],
+                "has_input_action": True,
+                "is_output": False,
             },
         ]
     },
@@ -149,7 +185,6 @@ def perform_actions(data):
             "action": ["on"]
         }
     """
-    print(data)
     if data["name"] == "LED":
         if data["action"] == "on":
             led.on()
@@ -157,6 +192,13 @@ def perform_actions(data):
             led.off()
         elif data["action"] == "toggle":
             led.toggle()
+    elif data["name"] == "Servo":
+        if data["action"] == "left":
+            move_servo("1l")
+        elif data["action"] == "right":
+            move_servo("1r")
+        else:
+            move_servo(data["action"])
 
 
 def get_commands():
@@ -301,7 +343,7 @@ def main():
 
     pir.irq(trigger=machine.Pin.IRQ_RISING, handler=movement_detector_handler)
     led.on()
-    sleep(2)
+    sleep(1)
     led.off()
     get_commands()
 
