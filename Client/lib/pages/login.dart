@@ -6,7 +6,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:inzynierka_client/state/state.dart';
-import 'package:inzynierka_client/pages/home.dart';
 import 'package:inzynierka_client/scaffold.dart';
 
 enum FormType { login, register }

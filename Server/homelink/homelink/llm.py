@@ -35,9 +35,22 @@ class CommandClass(BaseModel):
     repeat_interval: Optional[str]
 
 
+class ComponentData(BaseModel):
+    name: str
+    actions: List[str]
+    is_output: bool
+    has_input_action: bool
+
+
+class DeviceData(BaseModel):
+    id: int
+    components: List[ComponentData]
+
+
 class ModelResponse(BaseModel):
     text: str
     commands_to_execute: List[CommandClass]
+    device_data_to_everride: Optional[DeviceData]
 
 
 def get_structured_response(
@@ -55,7 +68,12 @@ def get_structured_response(
                 + json.dumps(d)
                 + "If device has has_input_action flag set to True, you can provide any string input value in the action field "
                 "If you want to schedule command, set scheduled_at and repeat_interval if it should repeat "
-                f"current time is: {datetime.now()}",
+                f"current time is: {datetime.now()}. "
+                "User can also edit configuration of devices, if you want to override device data, set device_data_to_everride field. "
+                "Make sure to pass whole data, it will be used to override device data. "
+                "You can only change value for actions field and change has_input_action only if user asks too ("
+                "this field is used to check if mobile app should show user input field for any action)."
+                " Leave it empty if you don't want to override device data.",
             },
             *messages,
         ],
@@ -75,7 +93,23 @@ def get_structured_response(
             repeat_interval=command.repeat_interval,
         )
 
-    print(text_response)
+    if response.device_data_to_everride:
+        try:
+            device = Device.objects.get(id=response.device_data_to_everride.id)
+            device.data = {
+                "components": [
+                    {
+                        "name": c.name,
+                        "actions": c.actions,
+                        "is_output": c.is_output,
+                        "has_input_action": c.has_input_action,
+                    }
+                    for c in response.device_data_to_everride.components
+                ]
+            }
+            device.save()
+        except:
+            pass
     return text_response
 
 
