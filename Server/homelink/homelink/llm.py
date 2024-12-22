@@ -73,7 +73,8 @@ def get_structured_response(
                 "Make sure to pass whole data, it will be used to override device data. "
                 "You can only change value for actions field and change has_input_action only if user asks too ("
                 "this field is used to check if mobile app should show user input field for any action)."
-                " Leave it empty if you don't want to override device data.",
+                " Leave it empty if you don't want to override device data."
+                " New actions should be similar to existing ones, description may descibe the format.",
             },
             *messages,
         ],

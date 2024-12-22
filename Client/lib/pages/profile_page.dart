@@ -5,6 +5,7 @@ import 'package:inzynierka_client/state/state.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../classes/chat.dart';
 
 class Command {
   final int id;
@@ -143,6 +144,9 @@ class _ProfilePageState extends State<ProfilePage>
       final appState = context.read<AppState>();
       appState.setUsername("");
       appState.setToken("");
+      appState.setChatMessages([
+        ChatMessage(content: "Hello", author: Author.llm),
+      ]);
 
       Navigator.pushReplacementNamed(context, '/login');
     } catch (e) {
