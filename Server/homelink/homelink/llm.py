@@ -50,7 +50,7 @@ class DeviceData(BaseModel):
 class ModelResponse(BaseModel):
     text: str
     commands_to_execute: List[CommandClass]
-    device_data_to_everride: Optional[DeviceData]
+    device_data_to_override: Optional[DeviceData]
 
 
 def get_structured_response(
@@ -69,7 +69,7 @@ def get_structured_response(
                 + "If device has has_input_action flag set to True, you can provide any string input value in the action field "
                 "If you want to schedule command, set scheduled_at and repeat_interval if it should repeat "
                 f"current time is: {datetime.now()}. "
-                "User can also edit configuration of devices, if you want to override device data, set device_data_to_everride field. "
+                "User can also edit configuration of devices, if you want to override device data, set device_data_to_override field. "
                 "Make sure to pass whole data, it will be used to override device data. "
                 "You can only change value for actions field and change has_input_action only if user asks too ("
                 "this field is used to check if mobile app should show user input field for any action)."
@@ -95,9 +95,9 @@ def get_structured_response(
             repeat_interval=command.repeat_interval,
         )
 
-    if response.device_data_to_everride:
+    if response.device_data_to_override:
         try:
-            device = Device.objects.get(id=response.device_data_to_everride.id)
+            device = Device.objects.get(id=response.device_data_to_override.id)
             device.data = {
                 "components": [
                     {
@@ -106,7 +106,7 @@ def get_structured_response(
                         "is_output": c.is_output,
                         "has_input_action": c.has_input_action,
                     }
-                    for c in response.device_data_to_everride.components
+                    for c in response.device_data_to_override.components
                 ]
             }
             device.save()
