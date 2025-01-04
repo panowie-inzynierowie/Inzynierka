@@ -21,3 +21,4 @@ class UserSerializer(serializers.ModelSerializer):
             "username",
             "password",
         )
+        ref_name = "UserSerializerCreate"
