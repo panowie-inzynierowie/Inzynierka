@@ -59,7 +59,9 @@ class DeviceSerializer(serializers.ModelSerializer):
 
 
 class CommandSerializer(serializers.ModelSerializer):
-    device__name = serializers.CharField(source="device.name")
+    device__name = serializers.CharField(
+        source="device.name", allow_null=True, required=False
+    )
 
     class Meta:
         model = Command
