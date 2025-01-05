@@ -19,7 +19,7 @@ schema_view = get_schema_view(
 )
 urlpatterns = [
     path("login/", views.obtain_auth_token),
-    path("register/", CreateUserView.as_view()),
+    path("register/", CreateUserView.as_view(), name="create-user"),
     path("admin/", admin.site.urls),
     path("api/chat/", ChatGPTView.as_view(), name="chat-gpt"),
     path("api/generate-links/", GenerateLinksView.as_view(), name="generate-links"),
