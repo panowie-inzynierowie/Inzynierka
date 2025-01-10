@@ -64,20 +64,20 @@ class _CommandsPageState extends State<CommandsPage> {
 
           final commands = snapshot.data!;
           return ListView.builder(
-            padding: const EdgeInsets.all(16.0), // Add padding around the list
+            padding: const EdgeInsets.all(16.0),
             itemCount: commands.length,
             itemBuilder: (context, index) {
               final command = commands[index];
               return Card(
-                elevation: 4, // Add shadow to the card
-                margin: const EdgeInsets.only(bottom: 16.0), // Add margin between cards
+                elevation: 4,
+                margin: const EdgeInsets.only(bottom: 16.0),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0), // Rounded corners
+                  borderRadius: BorderRadius.circular(12.0),
                 ),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.all(16.0), // Add padding inside the ListTile
+                  contentPadding: const EdgeInsets.all(16.0),
                   leading: const Icon(
-                    Icons.settings_remote, // Icon to represent commands
+                    Icons.settings_remote,
                     color: Colors.blueAccent,
                     size: 40,
                   ),

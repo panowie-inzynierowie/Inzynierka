@@ -11,7 +11,7 @@ class CommandDetailsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Command Details'),
-        backgroundColor: Colors.blueAccent, // Customizing AppBar color
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -19,7 +19,7 @@ class CommandDetailsPage extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
-          elevation: 4, // Adding shadow for the card
+          elevation: 4,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(

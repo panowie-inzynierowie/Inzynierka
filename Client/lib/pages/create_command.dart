@@ -59,7 +59,7 @@ class _CreateCommandPageState extends State<CreateCommandPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create New Command'),
-        backgroundColor: Colors.blueAccent,  // AppBar custom color
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -106,7 +106,7 @@ class _CreateCommandPageState extends State<CreateCommandPage> {
                 padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                 textStyle: const TextStyle(fontSize: 16),
-                backgroundColor: Colors.blueAccent,  // Updated button color
+                backgroundColor: Colors.blueAccent,
               ),
             ),
 
@@ -119,7 +119,7 @@ class _CreateCommandPageState extends State<CreateCommandPage> {
               ),
             ],
 
-            const Spacer(), // Pushes the create button to the bottom
+            const Spacer(),
 
             // Create Button
             SizedBox(
@@ -127,7 +127,7 @@ class _CreateCommandPageState extends State<CreateCommandPage> {
               child: ElevatedButton(
                 onPressed: _createCommand,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,  // Updated button color
+                  backgroundColor: Colors.blueAccent,
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   shape: RoundedRectangleBorder(

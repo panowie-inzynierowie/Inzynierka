@@ -172,8 +172,7 @@ class CommandsLinkViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
 
-# AddUserToSpaceView to add a user to a space
-class AddUserToSpaceView(APIView):  # APIView is now imported
+class AddUserToSpaceView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, space_id):
@@ -204,8 +203,7 @@ class AddUserToSpaceView(APIView):  # APIView is now imported
             )
 
 
-# RemoveUserFromSpaceView to remove a user from a space
-class RemoveUserFromSpaceView(APIView):  # APIView is now imported
+class RemoveUserFromSpaceView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, space_id, user_id):
