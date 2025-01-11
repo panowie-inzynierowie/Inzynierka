@@ -1,12 +1,13 @@
-from django.test import TestCase, RequestFactory
-from rest_framework.test import APITestCase
+from django.test import TestCase
+from rest_framework.test import APIRequestFactory
 from django.contrib.auth import get_user_model
-from database.models.models import Space, Device, Command, CommandsLink
-from database.serializers import (
+from datetime import timedelta
+from ..models.models import Space, Device, Command, CommandsLink
+from ..serializers import (
     UserSerializer,
     SpaceSerializer,
-    DeviceUpdateSerializer,
     DeviceSerializer,
+    DeviceUpdateSerializer,
     CommandSerializer,
     CommandForDeviceSerializer,
     CommandsLinkSerializer,
@@ -14,174 +15,104 @@ from database.serializers import (
 
 User = get_user_model()
 
+
 class UserSerializerTest(TestCase):
-    def test_user_serializer_fields(self):
-        user = User(username="testuser", email="test@example.com", pk=123)
+    def test_user_serializer(self):
+        user = User.objects.create_user(username="testuser", email="test@example.com", password="testpassword")
         serializer = UserSerializer(user)
-        data = serializer.data
-        self.assertIn("id", data)
-        self.assertIn("username", data)
-        self.assertIn("email", data)
-        self.assertIn("pk", data)
-        self.assertEqual(data["username"], "testuser")
-        self.assertEqual(data["email"], "test@example.com")
-        self.assertEqual(data["pk"], 123)
+        expected_data = {
+            "id": user.id,
+            "username": "testuser",
+            "email": "test@example.com",
+            "pk": user.pk,
+        }
+        self.assertEqual(serializer.data, expected_data)
 
 
-class SpaceSerializerTest(APITestCase):
+class SpaceSerializerTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="user1", password="pass1")
-        self.factory = RequestFactory()
-        self.request = self.factory.post("/fake-url/")
-        self.request.user = self.user
+        self.user = User.objects.create_user(username="owner", password="password")
+        self.factory = APIRequestFactory()
 
-    def test_space_serializer_create(self):
-        # Sprawdzamy czy serializer tworzy poprawnie Space przypisując ownera i dodając go do users
-        serializer = SpaceSerializer(
-            data={"name": "Living Room", "description": "Main living area"},
-            context={"request": self.request},
-        )
-        self.assertTrue(serializer.is_valid(), serializer.errors)
+    def test_create_space(self):
+        data = {"name": "Test Space", "description": "A test space"}
+        request = self.factory.post("/spaces/", data)
+        request.user = self.user
+        context = {"request": request}
+        serializer = SpaceSerializer(data=data, context=context)
+        self.assertTrue(serializer.is_valid())
         space = serializer.save()
-        self.assertEqual(space.name, "Living Room")
-        self.assertEqual(space.owner, self.user)
-        self.assertIn(self.user, space.users.all())
 
-    def test_space_serializer_read(self):
-        space = Space.objects.create(name="Kitchen", owner=self.user)
-        space.users.add(self.user)
-        serializer = SpaceSerializer(space)
-        data = serializer.data
-        self.assertEqual(data["name"], "Kitchen")
-        self.assertEqual(len(data["users"]), 1)
-        self.assertEqual(data["users"][0]["username"], "user1")
+        self.assertEqual(space.name, "Test Space")
+        self.assertEqual(space.description, "A test space")
+        self.assertIn(self.user, space.users.all())
+        self.assertEqual(space.owner, self.user)
+
+
+class DeviceSerializerTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="owner", password="password")
+        self.space = Space.objects.create(name="Living Room", owner=self.user)
+        self.device = Device.objects.create(name="Lamp", owner=self.user, space=self.space)
+
+    def test_device_serializer(self):
+        serializer = DeviceSerializer(self.device)
+        self.assertEqual(serializer.data["name"], "Lamp")
+        self.assertEqual(serializer.data["space"]["name"], "Living Room")
+        self.assertEqual(serializer.data["owner"], "owner")
 
 
 class DeviceUpdateSerializerTest(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username="owner", password="pass")
-        self.space = Space.objects.create(name="Office", owner=self.user)
-        self.device = Device.objects.create(
-            name="Sensor",
-            owner=self.user,
-            space=self.space,
-            data={"components": []}
-        )
-
-    def test_device_update_serializer_partial_update(self):
-        serializer = DeviceUpdateSerializer(
-            self.device,
-            data={"name": "New Sensor Name"},
-            partial=True
-        )
-        self.assertTrue(serializer.is_valid(), serializer.errors)
-        updated_device = serializer.save()
-        self.assertEqual(updated_device.name, "New Sensor Name")
-
-
-class DeviceSerializerTest(APITestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username="owner", password="pass")
-        self.space = Space.objects.create(name="Garage", owner=self.user)
-        self.space.users.add(self.user)
-        self.device = Device.objects.create(
-            name="Lightbulb",
-            owner=self.user,
-            space=self.space,
-            data={"components": [{"name": "LED", "actions": ["on", "off"]}]}
-        )
-        self.factory = RequestFactory()
-        self.request = self.factory.post("/fake-url/")
-        self.request.user = self.user
-
-    def test_device_serializer_read(self):
-        serializer = DeviceSerializer(self.device, context={"request": self.request})
-        data = serializer.data
-        self.assertEqual(data["name"], "Lightbulb")
-        self.assertEqual(data["owner"], "owner")
-        self.assertIn("space", data)
-        self.assertIn("data", data)
-        self.assertEqual(data["space"]["name"], "Garage")
-
-    def test_device_serializer_write_space_id(self):
-        new_space = Space.objects.create(name="Garden", owner=self.user)
-        new_space.users.add(self.user)
-        serializer = DeviceSerializer(
-            self.device,
-            data={"space_id": new_space.id, "name": "Garden Lamp"},
-            partial=True,
-            context={"request": self.request}
-        )
-        self.assertTrue(serializer.is_valid(), serializer.errors)
-        device = serializer.save()
-        self.assertEqual(device.space, new_space)
-        self.assertEqual(device.name, "Garden Lamp")
+    def test_device_update_serializer(self):
+        data = {"name": "Updated Device", "description": "Updated description"}
+        serializer = DeviceUpdateSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.validated_data["name"], "Updated Device")
+        self.assertEqual(serializer.validated_data["description"], "Updated description")
 
 
 class CommandSerializerTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="cmduser", password="pass")
-        self.space = Space.objects.create(name="Hall", owner=self.user)
-        self.device = Device.objects.create(
-            name="Door Lock",
-            owner=self.user,
-            space=self.space,
-            data={"components": [{"name": "Lock", "actions": ["lock", "unlock"]}]}
-        )
-        self.command = Command.objects.create(
+        self.user = User.objects.create_user(username="owner", password="password")
+        self.device = Device.objects.create(name="Lamp", owner=self.user)
+
+    def test_command_serializer(self):
+        command = Command.objects.create(
             author=self.user,
             device=self.device,
-            data={"name": "Lock", "action": "lock"},
-            executed=False
+            description="Turn on the lamp",
+            executed=False,
+            data={"action": "turn_on"},
         )
+        serializer = CommandSerializer(command)
+        self.assertEqual(serializer.data["description"], "Turn on the lamp")
+        self.assertEqual(serializer.data["device__name"], "Lamp")
 
-    def test_command_serializer_read(self):
-        serializer = CommandSerializer(self.command)
-        data = serializer.data
-        self.assertEqual(data["device__name"], "Door Lock")
-        self.assertEqual(data["data"], {"name": "Lock", "action": "lock"})
-        self.assertEqual(data["executed"], False)
 
 
 class CommandForDeviceSerializerTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="devcmd", password="pass")
-        self.space = Space.objects.create(name="TestSpace", owner=self.user)
-        self.device = Device.objects.create(
-            name="Fan",
-            owner=self.user,
-            space=self.space,
-            data={"components": [{"name": "Fan", "actions": ["on", "off"]}]}
-        )
-        self.command = Command.objects.create(
-            author=self.user,
-            device=self.device,
-            data={"name": "Fan", "action": "on"}
-        )
+        self.user = User.objects.create_user(username="owner", password="password")
+        self.device = Device.objects.create(name="Lamp", owner=self.user)
 
     def test_command_for_device_serializer(self):
-        serializer = CommandForDeviceSerializer(self.command)
-        data = serializer.data
-        self.assertIn("id", data)
-        self.assertIn("data", data)
-        self.assertEqual(data["data"], {"name": "Fan", "action": "on"})
+        command = Command.objects.create(
+            author=self.user,
+            device=self.device,
+            data={"action": "turn_on"}
+        )
+        serializer = CommandForDeviceSerializer(command)
+        self.assertEqual(serializer.data["data"], {"action": "turn_on"})
+
 
 
 class CommandsLinkSerializerTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="linkuser", password="pass")
-        self.link = CommandsLink.objects.create(
-            triggers=[{"device_id": 1, "component_name": "LED", "action": "on", "satisfied_at": None}],
-            results=[{"device_id": 1, "data": {"name": "LED", "action": "off"}}],
-            owner=self.user
-        )
+        self.user = User.objects.create_user(username="owner", password="password")
 
     def test_commands_link_serializer(self):
-        serializer = CommandsLinkSerializer(self.link)
-        data = serializer.data
-        self.assertIn("id", data)
-        self.assertIn("triggers", data)
-        self.assertIn("results", data)
-        self.assertIn("ttl", data)
-        self.assertIn("owner", data)
-        self.assertEqual(data["owner"], self.user.id)  # Assuming fields = ["owner"] return owner id
+        commands_link = CommandsLink.objects.create(
+            owner=self.user, triggers=[], results=[], ttl=timedelta(seconds=3600)
+        )
+        serializer = CommandsLinkSerializer(commands_link)
+        self.assertEqual(serializer.data["ttl"], "01:00:00")

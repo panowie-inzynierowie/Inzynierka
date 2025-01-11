@@ -1,29 +1,40 @@
-# your_django_app/tests/test_serializers.py
-
+from ..serializers import UserSerializer
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from ..serializers import UserSerializer
+from rest_framework.exceptions import ValidationError
 
-User = get_user_model()
+UserModel = get_user_model()
+
 
 class UserSerializerTest(TestCase):
-    def test_create_user(self):
+    def test_create_user_successfully(self):
         data = {
             "username": "testuser",
-            "password": "testpass123"
+            "password": "testpassword",
         }
         serializer = UserSerializer(data=data)
-        self.assertTrue(serializer.is_valid(), serializer.errors)
-
+        self.assertTrue(serializer.is_valid())
         user = serializer.save()
-        self.assertIsInstance(user, User)
+
+        self.assertIsInstance(user, UserModel)
         self.assertEqual(user.username, "testuser")
-        self.assertTrue(user.check_password("testpass123"))
+        self.assertNotEqual(user.password, "testpassword")
+        self.assertTrue(user.check_password("testpassword"))
+
+    def test_create_user_missing_username(self):
+        data = {
+            "password": "testpassword",
+        }
+        serializer = UserSerializer(data=data)
+
+        with self.assertRaises(ValidationError):
+            serializer.is_valid(raise_exception=True)
 
     def test_create_user_missing_password(self):
         data = {
-            "username": "testuser"
+            "username": "testuser",
         }
         serializer = UserSerializer(data=data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('password', serializer.errors)
+
+        with self.assertRaises(ValidationError):
+            serializer.is_valid(raise_exception=True)
